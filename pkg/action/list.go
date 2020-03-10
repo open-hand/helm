@@ -20,8 +20,8 @@ import (
 	"path"
 	"regexp"
 
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
+	"github.com/choerodon/helm/pkg/release"
+	"github.com/choerodon/helm/pkg/releaseutil"
 )
 
 // ListStates represents zero or more status codes that a list item may have set

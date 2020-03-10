@@ -22,10 +22,10 @@ import (
 	"strings"
 	"testing"
 
-	"helm.sh/helm/v3/internal/test/ensure"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/repo"
-	"helm.sh/helm/v3/pkg/repo/repotest"
+	"github.com/choerodon/helm/internal/test/ensure"
+	"github.com/choerodon/helm/pkg/getter"
+	"github.com/choerodon/helm/pkg/repo"
+	"github.com/choerodon/helm/pkg/repo/repotest"
 )
 
 func TestUpdateCmd(t *testing.T) {

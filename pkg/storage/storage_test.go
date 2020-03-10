@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"testing"
 
-	rspb "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	rspb"github.com/choerodon/helm/pkg/release"
+	"github.com/choerodon/helm/pkg/storage/driver"
 )
 
 func TestStorageCreate(t *testing.T) {

@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
 	"path"
 	"path/filepath"
@@ -35,20 +36,20 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/downloader"
-	"helm.sh/helm/v3/pkg/engine"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/kube"
-	kubefake "helm.sh/helm/v3/pkg/kube/fake"
-	"helm.sh/helm/v3/pkg/postrender"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
-	"helm.sh/helm/v3/pkg/repo"
-	"helm.sh/helm/v3/pkg/storage"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/cli"
+	"github.com/choerodon/helm/pkg/downloader"
+	"github.com/choerodon/helm/pkg/engine"
+	"github.com/choerodon/helm/pkg/getter"
+	"github.com/choerodon/helm/pkg/kube"
+	kubefake "github.com/choerodon/helm/pkg/kube/fake"
+	"github.com/choerodon/helm/pkg/postrender"
+	"github.com/choerodon/helm/pkg/release"
+	"github.com/choerodon/helm/pkg/releaseutil"
+	"github.com/choerodon/helm/pkg/repo"
+	"github.com/choerodon/helm/pkg/storage"
+	"github.com/choerodon/helm/pkg/storage/driver"
 )
 
 // releaseNameMaxLen is the maximum length of a release name.
@@ -249,6 +250,14 @@ func (i *Install) Run(chrt *chart.Chart, vals map[string]interface{}) (*release.
 
 	var toBeAdopted kube.ResourceList
 	resources, err := i.cfg.KubeClient.Build(bytes.NewBufferString(rel.Manifest), !i.DisableOpenAPIValidation)
+	for _, r := range resources {
+			t := r.Object.(*unstructured.Unstructured)
+			l := t.GetLabels()
+			l["test-label"] = "this_is_a_test"
+			t.SetLabels(l)
+			r.Object = t
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to build kubernetes objects from release manifest")
 	}

@@ -19,7 +19,7 @@ package driver // import "helm.sh/helm/v3/pkg/storage/driver"
 import (
 	"github.com/pkg/errors"
 
-	rspb "helm.sh/helm/v3/pkg/release"
+	rspb "github.com/choerodon/helm/pkg/release"
 )
 
 var (

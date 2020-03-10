@@ -24,12 +24,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"helm.sh/helm/v3/cmd/helm/require"
-	"helm.sh/helm/v3/internal/completion"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/cli/output"
-	"helm.sh/helm/v3/pkg/release"
+	"github.com/choerodon/helm/cmd/helm/require"
+	"github.com/choerodon/helm/internal/completion"
+	"github.com/choerodon/helm/pkg/action"
+	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/cli/output"
+	"github.com/choerodon/helm/pkg/release"
 )
 
 // NOTE: Keep the list of statuses up-to-date with pkg/release/status.go.

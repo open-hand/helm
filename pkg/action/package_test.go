@@ -19,7 +19,7 @@ package action
 import (
 	"testing"
 
-	"helm.sh/helm/v3/pkg/chart"
+	"github.com/choerodon/helm/pkg/chart"
 )
 
 func TestSetVersion(t *testing.T) {

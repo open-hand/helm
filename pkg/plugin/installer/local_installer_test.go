@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"helm.sh/helm/v3/pkg/helmpath"
+	"github.com/choerodon/helm/pkg/helmpath"
 )
 
 var _ Installer = new(LocalInstaller)

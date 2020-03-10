@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 
-	"helm.sh/helm/v3/pkg/release"
+	"github.com/choerodon/helm/pkg/release"
 )
 
 // ReleaseTesting is the action for testing a release.

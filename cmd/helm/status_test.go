@@ -20,9 +20,9 @@ import (
 	"testing"
 	"time"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/release"
-	helmtime "helm.sh/helm/v3/pkg/time"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/release"
+	helmtime "github.com/choerodon/helm/pkg/time"
 )
 
 func TestStatusCmd(t *testing.T) {

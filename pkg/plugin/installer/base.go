@@ -19,7 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"helm.sh/helm/v3/pkg/helmpath"
+	"github.com/choerodon/helm/pkg/helmpath"
 )
 
 type base struct {

@@ -25,14 +25,14 @@ import (
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 
-	"helm.sh/helm/v3/cmd/helm/require"
-	"helm.sh/helm/v3/internal/completion"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/cli/output"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
-	helmtime "helm.sh/helm/v3/pkg/time"
+	"github.com/choerodon/helm/cmd/helm/require"
+	"github.com/choerodon/helm/internal/completion"
+	"github.com/choerodon/helm/pkg/action"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/cli/output"
+	"github.com/choerodon/helm/pkg/release"
+	"github.com/choerodon/helm/pkg/releaseutil"
+	helmtime "github.com/choerodon/helm/pkg/time"
 )
 
 var historyHelp = `

@@ -25,7 +25,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/pkg/cli"
+	"github.com/choerodon/helm/pkg/cli"
 )
 
 const pluginFileName = "plugin.yaml"

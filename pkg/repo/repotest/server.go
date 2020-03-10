@@ -26,7 +26,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/pkg/repo"
+	"github.com/choerodon/helm/pkg/repo"
 )
 
 // NewTempServer creates a server inside of a temp dir.

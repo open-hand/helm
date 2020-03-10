@@ -25,9 +25,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"helm.sh/helm/v3/internal/ignore"
-	"helm.sh/helm/v3/internal/sympath"
-	"helm.sh/helm/v3/pkg/chart"
+	"github.com/choerodon/helm/internal/ignore"
+	"github.com/choerodon/helm/internal/sympath"
+	"github.com/choerodon/helm/pkg/chart"
 )
 
 // DirLoader loads a chart from a directory
