@@ -27,10 +27,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/helmpath"
-	"helm.sh/helm/v3/pkg/plugin/cache"
+	"github.com/choerodon/helm/pkg/cli"
+	"github.com/choerodon/helm/pkg/getter"
+	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/choerodon/helm/pkg/plugin/cache"
 )
 
 // HTTPInstaller installs plugins from an archive served by a web server.

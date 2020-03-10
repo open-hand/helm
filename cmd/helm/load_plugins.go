@@ -32,8 +32,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/internal/completion"
-	"helm.sh/helm/v3/pkg/plugin"
+	"github.com/choerodon/helm/internal/completion"
+	"github.com/choerodon/helm/pkg/plugin"
 )
 
 const (

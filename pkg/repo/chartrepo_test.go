@@ -30,10 +30,10 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/internal/test/ensure"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/getter"
+	"github.com/choerodon/helm/internal/test/ensure"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/cli"
+	"github.com/choerodon/helm/pkg/getter"
 )
 
 const (

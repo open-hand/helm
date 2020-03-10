@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 
-	"helm.sh/helm/v3/cmd/helm/require"
+	"github.com/choerodon/helm/cmd/helm/require"
 )
 
 const docsDesc = `

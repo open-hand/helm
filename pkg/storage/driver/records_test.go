@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	rspb "helm.sh/helm/v3/pkg/release"
+	rspb "github.com/choerodon/helm/pkg/release"
 )
 
 func TestRecordsAdd(t *testing.T) {

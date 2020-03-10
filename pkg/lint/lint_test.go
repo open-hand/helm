@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"helm.sh/helm/v3/pkg/lint/support"
+	"github.com/choerodon/helm/pkg/lint/support"
 )
 
 var values map[string]interface{}

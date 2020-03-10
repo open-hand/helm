@@ -19,7 +19,7 @@ package releaseutil // import "helm.sh/helm/v3/pkg/releaseutil"
 import (
 	"sort"
 
-	rspb "helm.sh/helm/v3/pkg/release"
+	rspb"github.com/choerodon/helm/pkg/release"
 )
 
 type list []*rspb.Release

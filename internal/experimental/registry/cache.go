@@ -34,9 +34,9 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/chart/loader"
+	"github.com/choerodon/helm/pkg/chartutil"
 )
 
 const (

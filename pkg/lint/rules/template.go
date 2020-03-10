@@ -24,10 +24,10 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/engine"
-	"helm.sh/helm/v3/pkg/lint/support"
+	"github.com/choerodon/helm/pkg/chart/loader"
+	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/engine"
+	"github.com/choerodon/helm/pkg/lint/support"
 )
 
 var (

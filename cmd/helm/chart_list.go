@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"helm.sh/helm/v3/pkg/action"
+	"github.com/choerodon/helm/pkg/action"
 )
 
 const chartListDesc = `

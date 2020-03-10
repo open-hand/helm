@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	rspb "helm.sh/helm/v3/pkg/release"
+	rspb "github.com/choerodon/helm/pkg/release"
 )
 
 func releaseStub(name string, vers int, namespace string, status rspb.Status) *rspb.Release {

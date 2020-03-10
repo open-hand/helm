@@ -22,8 +22,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
-
-	rspb "helm.sh/helm/v3/pkg/release"
+	rspb "github.com/choerodon/helm/pkg/release"
 )
 
 var b64 = base64.StdEncoding

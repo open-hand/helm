@@ -19,8 +19,8 @@ package action
 import (
 	"io"
 
-	"helm.sh/helm/v3/internal/experimental/registry"
-	"helm.sh/helm/v3/pkg/chart"
+	"github.com/choerodon/helm/internal/experimental/registry"
+	"github.com/choerodon/helm/pkg/chart"
 )
 
 // ChartSave performs a chart save operation.

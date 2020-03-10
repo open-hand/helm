@@ -26,12 +26,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/resource"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/kube"
-	"helm.sh/helm/v3/pkg/postrender"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/kube"
+	"github.com/choerodon/helm/pkg/postrender"
+	"github.com/choerodon/helm/pkg/release"
+	"github.com/choerodon/helm/pkg/releaseutil"
 )
 
 // Upgrade is the action for upgrading releases.

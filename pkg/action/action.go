@@ -27,13 +27,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"helm.sh/helm/v3/internal/experimental/registry"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/kube"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage"
-	"helm.sh/helm/v3/pkg/storage/driver"
-	"helm.sh/helm/v3/pkg/time"
+	"github.com/choerodon/helm/internal/experimental/registry"
+	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/kube"
+	"github.com/choerodon/helm/pkg/release"
+	"github.com/choerodon/helm/pkg/storage"
+	"github.com/choerodon/helm/pkg/storage/driver"
+	"github.com/choerodon/helm/pkg/time"
 )
 
 // Timestamper is a function capable of producing a timestamp.Timestamper.

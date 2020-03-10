@@ -17,7 +17,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"helm.sh/helm/v3/pkg/helmpath/xdg"
+	"github.com/choerodon/helm/pkg/helmpath/xdg"
 )
 
 // lazypath is an lazy-loaded path buffer for the XDG base directory specification.

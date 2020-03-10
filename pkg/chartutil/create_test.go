@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/chart/loader"
 )
 
 func TestCreate(t *testing.T) {

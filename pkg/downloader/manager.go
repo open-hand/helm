@@ -31,15 +31,15 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/internal/resolver"
-	"helm.sh/helm/v3/internal/third_party/dep/fs"
-	"helm.sh/helm/v3/internal/urlutil"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/helmpath"
-	"helm.sh/helm/v3/pkg/repo"
+	"github.com/choerodon/helm/internal/resolver"
+	"github.com/choerodon/helm/internal/third_party/dep/fs"
+	"github.com/choerodon/helm/internal/urlutil"
+	"github.com/choerodon/helm/pkg/chart"
+	"github.com/choerodon/helm/pkg/chart/loader"
+	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/choerodon/helm/pkg/getter"
+	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/choerodon/helm/pkg/repo"
 )
 
 // Manager handles the lifecycle of fetching, resolving, and storing dependencies.
