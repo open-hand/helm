@@ -30,7 +30,7 @@ import (
 
 	"github.com/choerodon/helm/internal/test"
 	"github.com/choerodon/helm/pkg/chartutil"
-	kubefake"github.com/choerodon/helm/pkg/kube/fake"
+	kubefake "github.com/choerodon/helm/pkg/kube/fake"
 	"github.com/choerodon/helm/pkg/release"
 	"github.com/choerodon/helm/pkg/storage/driver"
 	"github.com/choerodon/helm/pkg/time"
@@ -44,7 +44,7 @@ type nameTemplateTestCase struct {
 
 func installAction(t *testing.T) *Install {
 	config := actionConfigFixture(t)
-	instAction := NewInstall(config)
+	instAction := NewInstall(config, ChartPathOptions{}, 0, nil, "", "", "", "", 0, "", "", false)
 	instAction.Namespace = "spaced"
 	instAction.ReleaseName = "test-install-release"
 

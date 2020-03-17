@@ -23,9 +23,9 @@ import (
 )
 
 func TestShow(t *testing.T) {
-	client := NewShow(ShowAll)
+	client := NewShow(nil, ShowAll,ChartPathOptions{})
 
-	output, err := client.Run("../../cmd/helm/testdata/testcharts/alpine")
+	output, err := client.Run("../../cmd/helm/testdata/testcharts/alpine", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

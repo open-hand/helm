@@ -18,6 +18,7 @@ package action
 
 import (
 	"fmt"
+	"github.com/choerodon/helm/pkg/release"
 	"strings"
 
 	"sigs.k8s.io/yaml"
@@ -39,6 +40,8 @@ const (
 	ShowValues ShowOutputFormat = "values"
 	// ShowReadme is the format which only shows the chart's README
 	ShowReadme ShowOutputFormat = "readme"
+	// ShowHook is the format which only show the chart's hooks
+	ShowHook ShowOutputFormat = "hook"
 )
 
 var readmeFileNames = []string{"readme.md", "readme.txt", "readme"}
@@ -51,19 +54,23 @@ func (o ShowOutputFormat) String() string {
 //
 // It provides the implementation of 'helm show' and its respective subcommands.
 type Show struct {
+	cfg          *Configuration
 	OutputFormat ShowOutputFormat
+	Namespace    string
 	ChartPathOptions
 }
 
 // NewShow creates a new Show object with the given configuration.
-func NewShow(output ShowOutputFormat) *Show {
+func NewShow(cfg *Configuration, output ShowOutputFormat, chartPathOptions ChartPathOptions) *Show {
 	return &Show{
-		OutputFormat: output,
+		cfg:              cfg,
+		OutputFormat:     output,
+		ChartPathOptions: chartPathOptions,
 	}
 }
 
 // Run executes 'helm show' against the given release.
-func (s *Show) Run(chartpath string) (string, error) {
+func (s *Show) Run(chartpath string, vals map[string]interface{}) (string, error) {
 	var out strings.Builder
 	chrt, err := loader.Load(chartpath)
 	if err != nil {
@@ -75,12 +82,14 @@ func (s *Show) Run(chartpath string) (string, error) {
 	}
 
 	if s.OutputFormat == ShowChart || s.OutputFormat == ShowAll {
+		fmt.Fprintln(&out, "\n--- ChartInfo")
+
 		fmt.Fprintf(&out, "%s\n", cf)
 	}
 
 	if (s.OutputFormat == ShowValues || s.OutputFormat == ShowAll) && chrt.Values != nil {
 		if s.OutputFormat == ShowAll {
-			fmt.Fprintln(&out, "---")
+			fmt.Fprintln(&out, "\n--- Values")
 		}
 		for _, f := range chrt.Raw {
 			if f.Name == chartutil.ValuesfileName {
@@ -89,12 +98,29 @@ func (s *Show) Run(chartpath string) (string, error) {
 		}
 	}
 
+	if s.OutputFormat == ShowHook || s.OutputFormat == ShowAll {
+		if s.OutputFormat == ShowAll {
+			fmt.Fprintln(&out, "\n--- Hooks")
+		}
+		hooks, err := s.FindHooks(chrt, vals)
+		if err != nil {
+			return "", nil
+		}
+		if hooks == nil {
+			return out.String(), nil
+		}
+		for _, hook := range hooks {
+			fmt.Fprintf(&out, "# Source: %s\n%s\n", hook.Path, hook.Manifest)
+		}
+	}
+
 	if s.OutputFormat == ShowReadme || s.OutputFormat == ShowAll {
 		if s.OutputFormat == ShowAll {
-			fmt.Fprintln(&out, "---")
+			fmt.Fprintln(&out, "\n--- README")
 		}
 		readme := findReadme(chrt.Files)
 		if readme == nil {
+			fmt.Fprintln(&out, "\n(README is empty)")
 			return out.String(), nil
 		}
 		fmt.Fprintf(&out, "%s\n", readme.Data)
@@ -111,4 +137,22 @@ func findReadme(files []*chart.File) (file *chart.File) {
 		}
 	}
 	return nil
+}
+
+func (s *Show) FindHooks(chrt *chart.Chart, vals map[string]interface{}) ([]*release.Hook, error) {
+	options := chartutil.ReleaseOptions{
+		Name:      chrt.Name(),
+		Namespace: s.Namespace,
+		Revision:  1,
+	}
+	caps, err := s.cfg.getCapabilities()
+	if err != nil {
+		return nil, err
+	}
+	valuesToRender, err := chartutil.ToRenderValues(chrt, vals, options, caps)
+	hooks, _, _, err := s.cfg.renderResources(chrt, valuesToRender, chrt.Name(), "", false, true, false, nil)
+	if err != nil {
+		return nil, err
+	}
+	return hooks, nil
 }
