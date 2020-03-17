@@ -17,6 +17,7 @@ require (
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/flock v0.7.1
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/gosuri/uitable v0.0.4
 	github.com/mattn/go-shellwords v1.0.10
 	github.com/mitchellh/copystructure v1.0.0

@@ -91,6 +91,10 @@ func (s *EnvSettings) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&s.RepositoryCache, "repository-cache", s.RepositoryCache, "path to the file containing cached repository indexes")
 }
 
+func (s *EnvSettings) SetNamespace(namespace string) {
+	s.namespace = namespace
+}
+
 func envOr(name, def string) string {
 	if v, ok := os.LookupEnv(name); ok {
 		return v

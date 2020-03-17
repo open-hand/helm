@@ -18,6 +18,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/choerodon/helm/pkg/cli/values"
+	"github.com/choerodon/helm/pkg/getter"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -51,8 +53,15 @@ This command inspects a chart (directory, file, or URL) and displays the content
 of the README file
 `
 
-func newShowCmd(out io.Writer) *cobra.Command {
-	client := action.NewShow(action.ShowAll)
+const hookChartDesc = `
+This command inspects a chart (directory, file, or URL) and displays the contents
+of hooks
+`
+
+func newShowCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
+	client := action.NewShow(cfg, action.ShowAll, action.ChartPathOptions{})
+
+	client.Namespace = settings.Namespace()
 
 	showCommand := &cobra.Command{
 		Use:     "show",
@@ -81,7 +90,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := client.Run(cp)
+			output, err := client.Run(cp, nil)
 			if err != nil {
 				return err
 			}
@@ -101,7 +110,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := client.Run(cp)
+			output, err := client.Run(cp, nil)
 			if err != nil {
 				return err
 			}
@@ -121,7 +130,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := client.Run(cp)
+			output, err := client.Run(cp, nil)
 			if err != nil {
 				return err
 			}
@@ -141,7 +150,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			output, err := client.Run(cp)
+			output, err := client.Run(cp, nil)
 			if err != nil {
 				return err
 			}
@@ -150,7 +159,35 @@ func newShowCmd(out io.Writer) *cobra.Command {
 		},
 	}
 
-	cmds := []*cobra.Command{all, readmeSubCmd, valuesSubCmd, chartSubCmd}
+	hookSubCmd := &cobra.Command{
+		Use:   "hooks [CHART]",
+		Short: "shows the chart's hook",
+		Long:  hookChartDesc,
+		Args:  require.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			valueOpts := &values.Options{}
+			p := getter.All(settings)
+			vals, err := valueOpts.MergeValues(p)
+			if err != nil {
+				return err
+			}
+
+			client.OutputFormat = action.ShowHook
+			cp, err := client.ChartPathOptions.LocateChart(args[0], settings)
+			if err != nil {
+				return err
+			}
+			output, err := client.Run(cp, vals)
+			if err != nil {
+				return err
+			}
+			fmt.Fprint(out, output)
+			return nil
+		},
+	}
+
+	cmds := []*cobra.Command{all, readmeSubCmd, valuesSubCmd, chartSubCmd, hookSubCmd}
 	for _, subCmd := range cmds {
 		addChartPathOptionsFlags(subCmd.Flags(), &client.ChartPathOptions)
 		showCommand.AddCommand(subCmd)
