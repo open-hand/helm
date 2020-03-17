@@ -30,10 +30,11 @@ import (
 )
 
 type Options struct {
-	ValueFiles   []string
-	StringValues []string
-	Values       []string
-	FileValues   []string
+	ValueFiles        []string
+	StringValues      []string
+	Values            []string
+	FileValues        []string
+	ValuesFromRequest string
 }
 
 // MergeValues merges values from files specified via -f/--values and directly
@@ -80,6 +81,16 @@ func (opts *Options) MergeValues(p getter.Providers) (map[string]interface{}, er
 		if err := strvals.ParseIntoFile(value, base, reader); err != nil {
 			return nil, errors.Wrap(err, "failed parsing --set-file data")
 		}
+	}
+
+	if opts.ValuesFromRequest != "" && opts.ValuesFromRequest != "{}" {
+		valuesFromRequestMap := make(map[string]interface{})
+		// 处理从devops发过来的value
+		if err := yaml.Unmarshal([]byte(opts.ValuesFromRequest), &valuesFromRequestMap); err != nil {
+			return nil, errors.Wrapf(err, "failed to parse %s", opts.ValuesFromRequest)
+		}
+
+		base = mergeMaps(base, valuesFromRequestMap)
 	}
 
 	return base, nil
