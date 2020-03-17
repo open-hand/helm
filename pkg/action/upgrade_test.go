@@ -25,14 +25,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	kubefake"github.com/choerodon/helm/pkg/kube/fake"
+	kubefake "github.com/choerodon/helm/pkg/kube/fake"
 	"github.com/choerodon/helm/pkg/release"
 	"github.com/choerodon/helm/pkg/time"
 )
 
 func upgradeAction(t *testing.T) *Upgrade {
 	config := actionConfigFixture(t)
-	upAction := NewUpgrade(config)
+	upAction := NewUpgrade(config, ChartPathOptions{}, 0, nil, "", "", "", 0, "")
 	upAction.Namespace = "spaced"
 
 	return upAction

@@ -62,7 +62,7 @@ set for a key called 'foo', the 'newbar' value would take precedence:
 `
 
 func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
-	client := action.NewUpgrade(cfg)
+	client := action.NewUpgrade(cfg, action.ChartPathOptions{}, 0, nil, "","","",0,"")
 	valueOpts := &values.Options{}
 	var outfmt output.Format
 	var createNamespace bool
@@ -99,7 +99,7 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 					if outfmt == output.Table {
 						fmt.Fprintf(out, "Release %q does not exist. Installing it now.\n", args[0])
 					}
-					instClient := action.NewInstall(cfg)
+					instClient := action.NewInstall(cfg, action.ChartPathOptions{}, 0, nil,"","", "", "", 0, "","",false)
 					instClient.CreateNamespace = createNamespace
 					instClient.ChartPathOptions = client.ChartPathOptions
 					instClient.DryRun = client.DryRun

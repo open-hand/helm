@@ -19,6 +19,8 @@ package action
 import (
 	"bytes"
 	"fmt"
+	"github.com/choerodon/helm/pkg/agent/action"
+	v1 "k8s.io/api/core/v1"
 	"strings"
 	"time"
 
@@ -64,12 +66,36 @@ type Upgrade struct {
 	Description              string
 	PostRenderer             postrender.PostRenderer
 	DisableOpenAPIValidation bool
+
+	ReleaseName     string
+	Command         int
+	ImagePullSecret []v1.LocalObjectReference
+	ChartName       string
+	ChartVersion    string
+	AppServiceId    int64
+	AgentVersion    string
 }
 
 // NewUpgrade creates a new Upgrade object with the given configuration.
-func NewUpgrade(cfg *Configuration) *Upgrade {
+func NewUpgrade(cfg *Configuration,
+	chartPathOptions ChartPathOptions,
+	command int,
+	imagePullSecret []v1.LocalObjectReference,
+	ReleaseName string,
+	chartName string,
+	chartVersion string,
+	appServiceId int64,
+	agentVersion string) *Upgrade {
 	return &Upgrade{
-		cfg: cfg,
+		ChartPathOptions: chartPathOptions,
+		cfg:              cfg,
+		Command:          command,
+		ImagePullSecret:  imagePullSecret,
+		ReleaseName:      ReleaseName,
+		ChartName:        chartName,
+		ChartVersion:     chartVersion,
+		AppServiceId:     appServiceId,
+		AgentVersion:     agentVersion,
 	}
 }
 
@@ -205,6 +231,18 @@ func (u *Upgrade) performUpgrade(originalRelease, upgradedRelease *release.Relea
 		return upgradedRelease, errors.Wrap(err, "unable to build kubernetes objects from current release manifest")
 	}
 	target, err := u.cfg.KubeClient.Build(bytes.NewBufferString(upgradedRelease.Manifest), !u.DisableOpenAPIValidation)
+
+	// 如果是agent升级，则跳过添加标签这一步，因为agent原本是直接在集群中安装的没有对应标签，如果在这里加标签k8s会报错
+	if u.ChartName != "choerodon-cluster-agent" {
+		// 在这里对要新chart包中的对象添加标签
+		for _, r := range target {
+			err = action.AddLabel(u.ImagePullSecret, u.Command, u.AppServiceId, r, u.ChartVersion, u.ReleaseName, u.ChartName, u.AgentVersion, "", false)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if err != nil {
 		return upgradedRelease, errors.Wrap(err, "unable to build kubernetes objects from new release manifest")
 	}

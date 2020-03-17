@@ -19,8 +19,9 @@ package action
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
+	"github.com/choerodon/helm/pkg/agent/action"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,7 +29,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -102,6 +102,15 @@ type Install struct {
 	// OutputDir/<ReleaseName>
 	UseReleaseName bool
 	PostRenderer   postrender.PostRenderer
+
+	Command         int
+	ImagePullSecret []v1.LocalObjectReference
+	ChartName       string
+	ChartVersion    string
+	AppServiceId    int64
+	AgentVersion    string
+	TestLabel       string
+	IsTest          bool
 }
 
 // ChartPathOptions captures common options used for controlling chart paths
@@ -118,9 +127,31 @@ type ChartPathOptions struct {
 }
 
 // NewInstall creates a new Install object with the given configuration.
-func NewInstall(cfg *Configuration) *Install {
+func NewInstall(cfg *Configuration,
+	chartPathOptions ChartPathOptions,
+	command int,
+	imagePullSecret []v1.LocalObjectReference,
+	namespace string,
+	releaseName string,
+	chartName string,
+	chartVersion string,
+	appServiceId int64,
+	agentVersion string,
+	testLabel string,
+	isTest bool) *Install {
 	return &Install{
-		cfg: cfg,
+		ChartPathOptions: chartPathOptions,
+		cfg:              cfg,
+		Command:          command,
+		ImagePullSecret:  imagePullSecret,
+		Namespace:        namespace,
+		ReleaseName:      releaseName,
+		ChartName:        chartName,
+		ChartVersion:     chartVersion,
+		AppServiceId:     appServiceId,
+		AgentVersion:     agentVersion,
+		TestLabel:        testLabel,
+		IsTest:           isTest,
 	}
 }
 
@@ -250,12 +281,13 @@ func (i *Install) Run(chrt *chart.Chart, vals map[string]interface{}) (*release.
 
 	var toBeAdopted kube.ResourceList
 	resources, err := i.cfg.KubeClient.Build(bytes.NewBufferString(rel.Manifest), !i.DisableOpenAPIValidation)
+
+	// 在这里对要创建的对象添加标签
 	for _, r := range resources {
-			t := r.Object.(*unstructured.Unstructured)
-			l := t.GetLabels()
-			l["test-label"] = "this_is_a_test"
-			t.SetLabels(l)
-			r.Object = t
+		err = action.AddLabel(i.ImagePullSecret, i.Command, i.AppServiceId, r, i.ChartVersion, i.ReleaseName, i.ChartName, i.AgentVersion, "", false)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err != nil {

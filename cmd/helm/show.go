@@ -18,6 +18,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/choerodon/helm/pkg/cli/values"
+	"github.com/choerodon/helm/pkg/getter"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -51,8 +53,15 @@ This command inspects a chart (directory, file, or URL) and displays the content
 of the README file
 `
 
-func newShowCmd(out io.Writer) *cobra.Command {
-	client := action.NewShow(action.ShowAll)
+const hookChartDesc = `
+This command inspects a chart (directory, file, or URL) and displays the contents
+of hooks
+`
+
+func newShowCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
+	client := action.NewShow(cfg, action.ShowAll, action.ChartPathOptions{})
+
+	client.Namespace = settings.Namespace()
 
 	showCommand := &cobra.Command{
 		Use:     "show",
@@ -77,7 +86,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 		Args:  require.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.OutputFormat = action.ShowAll
-			output, err := runShow(args, client)
+			output, err := runShow(args, client, nil)
 			if err != nil {
 				return err
 			}
@@ -93,7 +102,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 		Args:  require.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.OutputFormat = action.ShowValues
-			output, err := runShow(args, client)
+			output, err := runShow(args, client, nil)
 			if err != nil {
 				return err
 			}
@@ -109,7 +118,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 		Args:  require.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.OutputFormat = action.ShowChart
-			output, err := runShow(args, client)
+			output, err := runShow(args, client, nil)
 			if err != nil {
 				return err
 			}
@@ -125,7 +134,7 @@ func newShowCmd(out io.Writer) *cobra.Command {
 		Args:  require.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.OutputFormat = action.ShowReadme
-			output, err := runShow(args, client)
+			output, err := runShow(args, client, nil)
 			if err != nil {
 				return err
 			}
@@ -134,7 +143,31 @@ func newShowCmd(out io.Writer) *cobra.Command {
 		},
 	}
 
-	cmds := []*cobra.Command{all, readmeSubCmd, valuesSubCmd, chartSubCmd}
+	hookSubCmd := &cobra.Command{
+		Use:   "hooks [CHART]",
+		Short: "shows the chart's hook",
+		Long:  hookChartDesc,
+		Args:  require.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			valueOpts := &values.Options{}
+			p := getter.All(settings)
+			vals, err := valueOpts.MergeValues(p)
+			if err != nil {
+				return err
+			}
+
+			client.OutputFormat = action.ShowHook
+			output, err := runShow(args, client, vals)
+			if err != nil {
+				return err
+			}
+			fmt.Fprint(out, output)
+			return nil
+		},
+	}
+
+	cmds := []*cobra.Command{all, readmeSubCmd, valuesSubCmd, chartSubCmd, hookSubCmd}
 	for _, subCmd := range cmds {
 		addShowFlags(showCommand, subCmd, client)
 
@@ -153,7 +186,7 @@ func addShowFlags(showCmd *cobra.Command, subCmd *cobra.Command, client *action.
 	showCmd.AddCommand(subCmd)
 }
 
-func runShow(args []string, client *action.Show) (string, error) {
+func runShow(args []string, client *action.Show, vals map[string]interface{}) (string, error) {
 	debug("Original chart version: %q", client.Version)
 	if client.Version == "" && client.Devel {
 		debug("setting version to >0.0.0-0")
@@ -164,5 +197,5 @@ func runShow(args []string, client *action.Show) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return client.Run(cp)
+	return client.Run(cp, vals)
 }
