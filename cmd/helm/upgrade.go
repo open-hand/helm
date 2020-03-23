@@ -62,7 +62,7 @@ set for a key called 'foo', the 'newbar' value would take precedence:
 `
 
 func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
-	client := action.NewUpgrade(cfg, action.ChartPathOptions{}, 0, nil, "","","",0,"")
+	client := action.NewUpgrade(cfg, action.ChartPathOptions{}, 0, nil, "", "", "", 0, "")
 	valueOpts := &values.Options{}
 	var outfmt output.Format
 	var createNamespace bool
@@ -100,7 +100,7 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 					if outfmt == output.Table {
 						fmt.Fprintf(out, "Release %q does not exist. Installing it now.\n", args[0])
 					}
-					instClient := action.NewInstall(cfg, action.ChartPathOptions{}, 0, nil,"","", "", "", 0, "","",false)
+					instClient := action.NewInstall(cfg, action.ChartPathOptions{}, 0, nil, "", "", "", "", 0, "", "", false)
 					instClient.CreateNamespace = createNamespace
 					instClient.ChartPathOptions = client.ChartPathOptions
 					instClient.DryRun = client.DryRun
@@ -137,7 +137,7 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 				fmt.Fprintln(out, "WARNING: This chart is deprecated")
 			}
 
-			rel, err := client.Run(args[0], ch, vals)
+			rel, err := client.Run(args[0], ch, vals, "")
 			if err != nil {
 				return errors.Wrap(err, "UPGRADE FAILED")
 			}
