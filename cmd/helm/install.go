@@ -221,7 +221,7 @@ func runInstall(args []string, client *action.Install, valueOpts *values.Options
 	}
 
 	client.Namespace = settings.Namespace()
-	return client.Run(chartRequested, vals)
+	return client.Run(chartRequested, vals, "")
 }
 
 // isChartInstallable validates if a chart can be installed
