@@ -17,10 +17,10 @@ limitations under the License.
 package values
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/url"
 	"os"
+	"sigs.k8s.io/yaml"
 	"strings"
 
 	"github.com/pkg/errors"
