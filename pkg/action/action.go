@@ -81,6 +81,8 @@ type Configuration struct {
 	// Capabilities describes the capabilities of the Kubernetes cluster.
 	Capabilities *chartutil.Capabilities
 
+	ClientSet *kubernetes.Clientset
+
 	Log func(string, ...interface{})
 }
 
@@ -264,6 +266,7 @@ func (c *Configuration) Init(getter genericclioptions.RESTClientGetter, namespac
 	c.KubeClient = kc
 	c.Releases = store
 	c.Log = log
+	c.ClientSet = clientset
 
 	return nil
 }
