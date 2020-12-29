@@ -26,9 +26,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/internal/tlsutil"
-	"github.com/choerodon/helm/internal/version"
-	"github.com/choerodon/helm/pkg/cli"
+	"github.com/open-hand/helm/internal/tlsutil"
+	"github.com/open-hand/helm/internal/version"
+	"github.com/open-hand/helm/pkg/cli"
 )
 
 func TestHTTPGetter(t *testing.T) {

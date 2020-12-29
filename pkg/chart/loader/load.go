@@ -26,7 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 // ChartLoader loads a chart.

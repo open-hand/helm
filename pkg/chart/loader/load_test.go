@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 func TestLoadDir(t *testing.T) {

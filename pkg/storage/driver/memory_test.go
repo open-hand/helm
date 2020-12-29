@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"testing"
 
-	rspb "github.com/choerodon/helm/pkg/release"
+	rspb "github.com/open-hand/helm/pkg/release"
 )
 
 func TestMemoryName(t *testing.T) {

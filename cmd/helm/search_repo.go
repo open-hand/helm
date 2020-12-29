@@ -31,11 +31,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/search"
-	"github.com/choerodon/helm/internal/completion"
-	"github.com/choerodon/helm/pkg/cli/output"
-	"github.com/choerodon/helm/pkg/helmpath"
-	"github.com/choerodon/helm/pkg/repo"
+	"github.com/open-hand/helm/cmd/helm/search"
+	"github.com/open-hand/helm/internal/completion"
+	"github.com/open-hand/helm/pkg/cli/output"
+	"github.com/open-hand/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 const searchRepoDesc = `

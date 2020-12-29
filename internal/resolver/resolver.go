@@ -26,10 +26,10 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/helmpath"
-	"github.com/choerodon/helm/pkg/provenance"
-	"github.com/choerodon/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/provenance"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // Resolver resolves dependencies from semantic version ranges to a particular version.

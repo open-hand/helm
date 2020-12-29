@@ -17,15 +17,15 @@ package action
 
 import (
 	"bytes"
-	"github.com/choerodon/helm/pkg/agent/action"
+	"github.com/open-hand/helm/pkg/agent/action"
 	v1 "k8s.io/api/core/v1"
 	"sort"
 	"time"
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/release"
-	helmtime "github.com/choerodon/helm/pkg/time"
+	"github.com/open-hand/helm/pkg/release"
+	helmtime "github.com/open-hand/helm/pkg/time"
 )
 
 // execHook executes all of the hooks for the given hook event.

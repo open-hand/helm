@@ -19,7 +19,7 @@ package main
 import (
 	"testing"
 
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 func TestGetValuesCmd(t *testing.T) {

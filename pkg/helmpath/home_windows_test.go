@@ -19,7 +19,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/helmpath/xdg"
+	"github.com/open-hand/helm/pkg/helmpath/xdg"
 )
 
 func TestHelmHome(t *testing.T) {

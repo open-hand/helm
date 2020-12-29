@@ -26,14 +26,14 @@ import (
 	dockerauth "github.com/deislabs/oras/pkg/auth/docker"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 
-	"github.com/choerodon/helm/internal/experimental/registry"
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/chartutil"
-	kubefake "github.com/choerodon/helm/pkg/kube/fake"
-	"github.com/choerodon/helm/pkg/release"
-	"github.com/choerodon/helm/pkg/storage"
-	"github.com/choerodon/helm/pkg/storage/driver"
-	"github.com/choerodon/helm/pkg/time"
+	"github.com/open-hand/helm/internal/experimental/registry"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	kubefake "github.com/open-hand/helm/pkg/kube/fake"
+	"github.com/open-hand/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/storage"
+	"github.com/open-hand/helm/pkg/storage/driver"
+	"github.com/open-hand/helm/pkg/time"
 )
 
 var verbose = flag.Bool("test.log", false, "enable test logging")

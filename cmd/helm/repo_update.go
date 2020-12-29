@@ -24,9 +24,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/repo"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 const updateDesc = `

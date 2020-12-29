@@ -28,9 +28,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/internal/test/ensure"
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/open-hand/helm/internal/test/ensure"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/helmpath"
 )
 
 var _ Installer = new(HTTPInstaller)

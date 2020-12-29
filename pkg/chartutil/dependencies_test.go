@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/chart/loader"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart/loader"
 )
 
 func loadChart(t *testing.T, path string) *chart.Chart {

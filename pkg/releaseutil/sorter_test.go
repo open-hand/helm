@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	rspb"github.com/choerodon/helm/pkg/release"
-	helmtime"github.com/choerodon/helm/pkg/time"
+	rspb"github.com/open-hand/helm/pkg/release"
+	helmtime"github.com/open-hand/helm/pkg/time"
 )
 
 // note: this test data is shared with filter_test.go.

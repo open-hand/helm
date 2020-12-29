@@ -23,10 +23,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/chartutil"
-	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/helmpath"
 )
 
 const createDesc = `

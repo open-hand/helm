@@ -21,8 +21,8 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/choerodon/helm/internal/experimental/registry"
-	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/open-hand/helm/internal/experimental/registry"
+	"github.com/open-hand/helm/pkg/chartutil"
 )
 
 // ChartExport performs a chart export operation.

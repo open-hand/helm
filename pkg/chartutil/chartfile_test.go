@@ -19,7 +19,7 @@ package chartutil
 import (
 	"testing"
 
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 const testfile = "testdata/chartfiletest.yaml"

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 func TestManuallyProcessArgs(t *testing.T) {

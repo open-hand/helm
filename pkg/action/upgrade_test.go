@@ -20,14 +20,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	kubefake "github.com/choerodon/helm/pkg/kube/fake"
-	"github.com/choerodon/helm/pkg/release"
-	"github.com/choerodon/helm/pkg/time"
+	kubefake "github.com/open-hand/helm/pkg/kube/fake"
+	"github.com/open-hand/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/time"
 )
 
 func upgradeAction(t *testing.T) *Upgrade {

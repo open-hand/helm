@@ -24,14 +24,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/internal/completion"
-	"github.com/choerodon/helm/pkg/action"
-	"github.com/choerodon/helm/pkg/chart/loader"
-	"github.com/choerodon/helm/pkg/cli/output"
-	"github.com/choerodon/helm/pkg/cli/values"
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/storage/driver"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/internal/completion"
+	"github.com/open-hand/helm/pkg/action"
+	"github.com/open-hand/helm/pkg/chart/loader"
+	"github.com/open-hand/helm/pkg/cli/output"
+	"github.com/open-hand/helm/pkg/cli/values"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/storage/driver"
 )
 
 const upgradeDesc = `

@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/pkg/plugin"
+	"github.com/open-hand/helm/pkg/plugin"
 )
 
 const pluginHelp = `

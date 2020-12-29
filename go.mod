@@ -1,4 +1,4 @@
-module github.com/choerodon/helm
+module github.com/open-hand/helm
 
 go 1.13
 

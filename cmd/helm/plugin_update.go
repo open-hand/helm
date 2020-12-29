@@ -24,9 +24,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/internal/completion"
-	"github.com/choerodon/helm/pkg/plugin"
-	"github.com/choerodon/helm/pkg/plugin/installer"
+	"github.com/open-hand/helm/internal/completion"
+	"github.com/open-hand/helm/pkg/plugin"
+	"github.com/open-hand/helm/pkg/plugin/installer"
 )
 
 type pluginUpdateOptions struct {

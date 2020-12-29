@@ -19,8 +19,8 @@ package action
 import (
 	"io"
 
-	"github.com/choerodon/helm/internal/experimental/registry"
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/internal/experimental/registry"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 // ChartSave performs a chart save operation.

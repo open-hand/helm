@@ -20,7 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/pkg/action"
+	"github.com/open-hand/helm/pkg/action"
 )
 
 const chartHelp = `

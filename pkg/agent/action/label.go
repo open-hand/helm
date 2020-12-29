@@ -1,7 +1,7 @@
 package action
 
 import (
-	"github.com/choerodon/helm/pkg/agent/model"
+	"github.com/open-hand/helm/pkg/agent/model"
 	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

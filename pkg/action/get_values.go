@@ -17,7 +17,7 @@ limitations under the License.
 package action
 
 import (
-	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/chartutil"
 )
 
 // GetValues is the action for checking a given release's values.

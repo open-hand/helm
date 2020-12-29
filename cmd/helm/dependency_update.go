@@ -21,10 +21,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/pkg/action"
-	"github.com/choerodon/helm/pkg/downloader"
-	"github.com/choerodon/helm/pkg/getter"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/pkg/action"
+	"github.com/open-hand/helm/pkg/downloader"
+	"github.com/open-hand/helm/pkg/getter"
 )
 
 const dependencyUpDesc = `

@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/choerodon/helm/internal/experimental/registry"
+	"github.com/open-hand/helm/internal/experimental/registry"
 )
 
 func chartSaveAction(t *testing.T) *ChartSave {

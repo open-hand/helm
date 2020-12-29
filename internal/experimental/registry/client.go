@@ -30,8 +30,8 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/helmpath"
 )
 
 const (

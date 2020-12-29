@@ -24,7 +24,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/resource"
 
-	"github.com/choerodon/helm/pkg/kube"
+	"github.com/open-hand/helm/pkg/kube"
 )
 
 // PrintingKubeClient implements KubeClient, but simply prints the reader to

@@ -25,8 +25,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/strvals"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/strvals"
 )
 
 type Options struct {

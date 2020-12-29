@@ -25,11 +25,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/chartutil"
-	"github.com/choerodon/helm/pkg/cli"
-	"github.com/choerodon/helm/pkg/downloader"
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/downloader"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // Pull is the action for checking a given release's information.

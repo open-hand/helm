@@ -21,10 +21,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/chartutil"
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/repo/repotest"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/repo/repotest"
 )
 
 func TestVersionEquals(t *testing.T) {

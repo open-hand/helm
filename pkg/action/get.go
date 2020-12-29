@@ -17,7 +17,7 @@ limitations under the License.
 package action
 
 import (
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 // Get is the action for checking a given release's information.

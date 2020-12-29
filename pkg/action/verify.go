@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/choerodon/helm/pkg/downloader"
+	"github.com/open-hand/helm/pkg/downloader"
 )
 
 // Verify is the action for building a given chart's Verify tree.

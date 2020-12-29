@@ -26,9 +26,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/pkg/action"
-	"github.com/choerodon/helm/pkg/cli/values"
-	"github.com/choerodon/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/action"
+	"github.com/open-hand/helm/pkg/cli/values"
+	"github.com/open-hand/helm/pkg/getter"
 )
 
 var longLintHelp = `

@@ -21,11 +21,11 @@ import (
 	"io"
 	"sort"
 
-	"github.com/choerodon/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/cli"
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
+	"github.com/open-hand/helm/cmd/helm/require"
 )
 
 var (

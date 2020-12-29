@@ -22,9 +22,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	rspb "github.com/choerodon/helm/pkg/release"
-	relutil "github.com/choerodon/helm/pkg/releaseutil"
-	"github.com/choerodon/helm/pkg/storage/driver"
+	rspb "github.com/open-hand/helm/pkg/release"
+	relutil "github.com/open-hand/helm/pkg/releaseutil"
+	"github.com/open-hand/helm/pkg/storage/driver"
 )
 
 // The type field of the Kubernetes storage object which stores the Helm release

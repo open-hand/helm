@@ -24,8 +24,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/release"
-	helmtime "github.com/choerodon/helm/pkg/time"
+	"github.com/open-hand/helm/pkg/release"
+	helmtime "github.com/open-hand/helm/pkg/time"
 )
 
 // Rollback is the action for rolling back to a given release.

@@ -23,10 +23,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/choerodon/helm/internal/test/ensure"
-	"github.com/choerodon/helm/pkg/helmpath"
-	"github.com/choerodon/helm/pkg/repo"
-	"github.com/choerodon/helm/pkg/repo/repotest"
+	"github.com/open-hand/helm/internal/test/ensure"
+	"github.com/open-hand/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/repo/repotest"
 )
 
 func TestRepoRemove(t *testing.T) {

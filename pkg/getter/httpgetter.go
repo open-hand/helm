@@ -23,9 +23,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/internal/tlsutil"
-	"github.com/choerodon/helm/internal/urlutil"
-	"github.com/choerodon/helm/internal/version"
+	"github.com/open-hand/helm/internal/tlsutil"
+	"github.com/open-hand/helm/internal/urlutil"
+	"github.com/open-hand/helm/internal/version"
 )
 
 // HTTPGetter is the default HTTP(/S) backend handler

@@ -18,14 +18,14 @@ package action
 
 import (
 	"fmt"
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 	"strings"
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/chart/loader"
-	"github.com/choerodon/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart/loader"
+	"github.com/open-hand/helm/pkg/chartutil"
 )
 
 // ShowOutputFormat is the format of the output of `helm show`
