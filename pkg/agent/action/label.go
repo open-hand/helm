@@ -4,8 +4,10 @@ import (
 	"github.com/choerodon/helm/pkg/agent/model"
 	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/kubernetes"
 	"strconv"
 )
 
@@ -13,8 +15,10 @@ func AddLabel(imagePullSecret []v1.LocalObjectReference,
 	command int64,
 	appServiceId int64,
 	info *resource.Info,
-	version, releaseName, chartName, agentVersion, testLabel string,
-	isTest bool) error {
+	version, releaseName, chartName, agentVersion, testLabel, namespace string,
+	isTest bool,
+	isUpgrade bool,
+	clientSet *kubernetes.Clientset) error {
 	t := info.Object.(*unstructured.Unstructured)
 
 	l := t.GetLabels()
@@ -94,6 +98,32 @@ func AddLabel(imagePullSecret []v1.LocalObjectReference,
 		addTemplateAppLabels()
 		addSelectorAppLabels()
 		addImagePullSecrets()
+		if isUpgrade {
+			if kind == "ReplicaSet" {
+				rs, err := clientSet.AppsV1().ReplicaSets(namespace).Get(t.GetName(), metav1.GetOptions{})
+				if err != nil {
+					glog.Warningf("Failed to get ReplicaSet,error is %s.", err.Error())
+				}
+				if rs != nil {
+					err = setReplicas(t.Object, int64(*rs.Spec.Replicas))
+					if err != nil {
+						glog.Warningf("Failed to set replicas,error is %s", err.Error())
+					}
+				}
+			}
+			if kind == "Deployment" {
+				dp, err := clientSet.AppsV1().Deployments(namespace).Get(t.GetName(), metav1.GetOptions{})
+				if err != nil {
+					glog.Warningf("Failed to get Deployment,error is %s.", err.Error())
+				}
+				if dp != nil {
+					err = setReplicas(t.Object, int64(*dp.Spec.Replicas))
+					if err != nil {
+						glog.Warningf("Failed to set replicas,error is %s", err.Error())
+					}
+				}
+			}
+		}
 	case "ConfigMap":
 	case "Service":
 		l[model.NetworkLabel] = "service"
@@ -116,6 +146,20 @@ func AddLabel(imagePullSecret []v1.LocalObjectReference,
 		addAppLabels()
 		addTemplateAppLabels()
 		addImagePullSecrets()
+		if isUpgrade {
+			if kind == "StatefulSet" {
+				sts, err := clientSet.AppsV1().StatefulSets(namespace).Get(t.GetName(), metav1.GetOptions{})
+				if err != nil {
+					glog.Warningf("Failed to get Deployment,error is %s.", err.Error())
+				}
+				if sts != nil {
+					err = setReplicas(t.Object, int64(*sts.Spec.Replicas))
+					if err != nil {
+						glog.Warningf("Failed to set replicas,error is %s", err.Error())
+					}
+				}
+			}
+		}
 	case "Secret":
 		addAppLabels()
 	case "RoleBinding", "ClusterRoleBinding", "Role", "ClusterRole", "PodSecurityPolicy", "ServiceAccount":
@@ -133,6 +177,10 @@ func AddLabel(imagePullSecret []v1.LocalObjectReference,
 
 func setTemplateLabels(obj map[string]interface{}, templateLabels map[string]string) error {
 	return unstructured.SetNestedStringMap(obj, templateLabels, "spec", "template", "metadata", "labels")
+}
+
+func setReplicas(obj map[string]interface{}, value int64) error {
+	return unstructured.SetNestedField(obj, value, "spec", "replicas")
 }
 
 func getTemplateLabels(obj map[string]interface{}) map[string]string {
