@@ -19,7 +19,7 @@ package releaseutil
 import (
 	"sort"
 
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 // KindSortOrder is an ordering of Kinds.

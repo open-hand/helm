@@ -19,7 +19,7 @@ package action
 import (
 	"strings"
 
-	"github.com/choerodon/helm/pkg/releaseutil"
+	"github.com/open-hand/helm/pkg/releaseutil"
 )
 
 // resourcePolicyAnno is the annotation name for a resource policy

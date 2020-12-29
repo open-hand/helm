@@ -24,8 +24,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/choerodon/helm/internal/version"
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/internal/version"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 // SearchPath is the url path to the search API in monocular.

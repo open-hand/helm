@@ -17,7 +17,7 @@ limitations under the License.
 package release
 
 import (
-	"github.com/choerodon/helm/pkg/time"
+	"github.com/open-hand/helm/pkg/time"
 )
 
 // HookEvent specifies the hook event

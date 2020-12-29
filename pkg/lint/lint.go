@@ -19,8 +19,8 @@ package lint // import "helm.sh/helm/v3/pkg/lint"
 import (
 	"path/filepath"
 
-	"github.com/choerodon/helm/pkg/lint/rules"
-	"github.com/choerodon/helm/pkg/lint/support"
+	"github.com/open-hand/helm/pkg/lint/rules"
+	"github.com/open-hand/helm/pkg/lint/support"
 )
 
 // All runs all of the available linters on the given base directory.

@@ -19,7 +19,7 @@ package action
 import (
 	"io"
 
-	"github.com/choerodon/helm/internal/experimental/registry"
+	"github.com/open-hand/helm/internal/experimental/registry"
 )
 
 // ChartRemove performs a chart remove operation.

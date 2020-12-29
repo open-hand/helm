@@ -22,9 +22,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/provenance"
-	"github.com/choerodon/helm/pkg/repo"
-	"github.com/choerodon/helm/pkg/repo/repotest"
+	"github.com/open-hand/helm/pkg/provenance"
+	"github.com/open-hand/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/repo/repotest"
 )
 
 func TestDependencyBuildCmd(t *testing.T) {

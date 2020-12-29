@@ -20,8 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 func TestSortScore(t *testing.T) {

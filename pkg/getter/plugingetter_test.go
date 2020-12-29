@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/cli"
 )
 
 func TestCollectPlugins(t *testing.T) {

@@ -21,9 +21,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/pkg/plugin"
-	"github.com/choerodon/helm/pkg/plugin/installer"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/pkg/plugin"
+	"github.com/open-hand/helm/pkg/plugin/installer"
 )
 
 type pluginInstallOptions struct {

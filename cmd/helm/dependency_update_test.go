@@ -23,13 +23,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/choerodon/helm/internal/test/ensure"
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/chartutil"
-	"github.com/choerodon/helm/pkg/helmpath"
-	"github.com/choerodon/helm/pkg/provenance"
-	"github.com/choerodon/helm/pkg/repo"
-	"github.com/choerodon/helm/pkg/repo/repotest"
+	"github.com/open-hand/helm/internal/test/ensure"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/provenance"
+	"github.com/open-hand/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/repo/repotest"
 )
 
 func TestDependencyUpdateCmd(t *testing.T) {

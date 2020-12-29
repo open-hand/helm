@@ -24,8 +24,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/cli"
-	"github.com/choerodon/helm/pkg/plugin"
+	"github.com/open-hand/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/plugin"
 )
 
 // collectPlugins scans for getter plugins.

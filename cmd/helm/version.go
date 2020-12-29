@@ -23,8 +23,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/internal/version"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/internal/version"
 )
 
 const versionDesc = `

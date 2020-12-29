@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 func TestHistoryCmd(t *testing.T) {

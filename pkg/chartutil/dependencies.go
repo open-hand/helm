@@ -19,7 +19,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 // ProcessDependencies checks through this chart's dependencies, processing accordingly.

@@ -19,7 +19,7 @@ package action
 import (
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 // History is the action for checking the release's ledger.

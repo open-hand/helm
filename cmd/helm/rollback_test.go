@@ -19,8 +19,8 @@ package main
 import (
 	"testing"
 
-	"github.com/choerodon/helm/pkg/chart"
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 func TestRollbackCmd(t *testing.T) {

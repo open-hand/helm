@@ -17,7 +17,7 @@ limitations under the License.
 package action
 
 import (
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 // Status is the action for checking the deployment status of releases.

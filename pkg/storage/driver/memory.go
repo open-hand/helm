@@ -21,7 +21,7 @@ import (
 	"strings"
 	"sync"
 
-	rspb"github.com/choerodon/helm/pkg/release"
+	rspb"github.com/open-hand/helm/pkg/release"
 )
 
 var _ Driver = (*Memory)(nil)

@@ -25,8 +25,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/internal/monocular"
-	"github.com/choerodon/helm/pkg/cli/output"
+	"github.com/open-hand/helm/internal/monocular"
+	"github.com/open-hand/helm/pkg/cli/output"
 )
 
 const searchHubDesc = `

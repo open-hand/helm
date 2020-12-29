@@ -26,9 +26,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/choerodon/helm/internal/completion"
-	"github.com/choerodon/helm/internal/experimental/registry"
-	"github.com/choerodon/helm/pkg/action"
+	"github.com/open-hand/helm/internal/completion"
+	"github.com/open-hand/helm/internal/experimental/registry"
+	"github.com/open-hand/helm/pkg/action"
 )
 
 var globalUsage = `The Kubernetes package manager

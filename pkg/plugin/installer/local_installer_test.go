@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/helmpath"
 )
 
 var _ Installer = new(LocalInstaller)

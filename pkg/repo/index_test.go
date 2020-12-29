@@ -27,11 +27,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/cli"
-	"github.com/choerodon/helm/pkg/getter"
-	"github.com/choerodon/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/helmpath"
 
-	"github.com/choerodon/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart"
 )
 
 const (

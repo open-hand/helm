@@ -18,7 +18,7 @@ package getter
 import (
 	"testing"
 
-	"github.com/choerodon/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/cli"
 )
 
 const pluginDir = "testdata/plugins"

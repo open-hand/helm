@@ -22,7 +22,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/choerodon/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/cli"
 )
 
 func checkCommand(p *Plugin, extraArgs []string, osStrCmp string, t *testing.T) {

@@ -22,9 +22,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/choerodon/helm/pkg/release"
-	"github.com/choerodon/helm/pkg/releaseutil"
-	helmtime "github.com/choerodon/helm/pkg/time"
+	"github.com/open-hand/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/releaseutil"
+	helmtime "github.com/open-hand/helm/pkg/time"
 )
 
 // Uninstall is the action for uninstalling releases.

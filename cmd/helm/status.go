@@ -24,12 +24,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/choerodon/helm/cmd/helm/require"
-	"github.com/choerodon/helm/internal/completion"
-	"github.com/choerodon/helm/pkg/action"
-	"github.com/choerodon/helm/pkg/chartutil"
-	"github.com/choerodon/helm/pkg/cli/output"
-	"github.com/choerodon/helm/pkg/release"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/internal/completion"
+	"github.com/open-hand/helm/pkg/action"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/cli/output"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 // NOTE: Keep the list of statuses up-to-date with pkg/release/status.go.

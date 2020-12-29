@@ -30,7 +30,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 
-	"github.com/choerodon/helm/pkg/repo"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // Result is a search result.
