@@ -32,7 +32,7 @@ import (
 
 func upgradeAction(t *testing.T) *Upgrade {
 	config := actionConfigFixture(t)
-	upAction := NewUpgrade(config, ChartPathOptions{}, 0, nil, "", "", "", 0, "")
+	upAction := NewUpgrade(config, ChartPathOptions{}, "", 0, nil, "", "", "", 0, "", false)
 	upAction.Namespace = "spaced"
 
 	return upAction
@@ -54,7 +54,7 @@ func TestUpgradeRelease_Wait(t *testing.T) {
 	upAction.Wait = true
 	vals := map[string]interface{}{}
 
-	res, err := upAction.Run(rel.Name, buildChart(), vals, "", "")
+	res, err := upAction.Run(rel.Name, buildChart(), vals, "")
 	req.Error(err)
 	is.Contains(res.Info.Description, "I timed out")
 	is.Equal(res.Info.Status, release.StatusFailed)
@@ -78,7 +78,7 @@ func TestUpgradeRelease_CleanupOnFail(t *testing.T) {
 	upAction.CleanupOnFail = true
 	vals := map[string]interface{}{}
 
-	res, err := upAction.Run(rel.Name, buildChart(), vals, "", "")
+	res, err := upAction.Run(rel.Name, buildChart(), vals, "")
 	req.Error(err)
 	is.NotContains(err.Error(), "unable to cleanup resources")
 	is.Contains(res.Info.Description, "I timed out")
@@ -104,7 +104,7 @@ func TestUpgradeRelease_Atomic(t *testing.T) {
 		upAction.Atomic = true
 		vals := map[string]interface{}{}
 
-		res, err := upAction.Run(rel.Name, buildChart(), vals, "", "")
+		res, err := upAction.Run(rel.Name, buildChart(), vals, "")
 		req.Error(err)
 		is.Contains(err.Error(), "arming key removed")
 		is.Contains(err.Error(), "atomic")
@@ -129,7 +129,7 @@ func TestUpgradeRelease_Atomic(t *testing.T) {
 		upAction.Atomic = true
 		vals := map[string]interface{}{}
 
-		_, err := upAction.Run(rel.Name, buildChart(), vals, "", "")
+		_, err := upAction.Run(rel.Name, buildChart(), vals, "")
 		req.Error(err)
 		is.Contains(err.Error(), "update fail")
 		is.Contains(err.Error(), "an error occurred while rolling back the release")
