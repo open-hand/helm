@@ -130,7 +130,7 @@ func (o *repoAddOptions) run(out io.Writer) error {
 		return err
 	}
 
-	if _, err := r.DownloadIndexFile(); err != nil {
+	if _, _, err := r.DownloadIndexFile(); err != nil {
 		return errors.Wrapf(err, "looks like %q is not a valid chart repository or cannot be reached", o.url)
 	}
 
