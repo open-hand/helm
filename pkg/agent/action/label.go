@@ -27,7 +27,7 @@ func AddLabel(imagePullSecret []v1.LocalObjectReference,
 	kind := info.Mapping.GroupVersionKind.Kind
 
 	if t.GetNamespace() != "" && t.GetNamespace() != namespace {
-		return fmt.Errorf("kind:%s name:%s.the namespace of this resource is not consistent with helm release", kind, t.GetName())
+		return fmt.Errorf(" Kind:%s Name:%s. The namespace of this resource is not consistent with helm release", kind, t.GetName())
 	}
 
 	l := t.GetLabels()
