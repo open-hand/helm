@@ -28,19 +28,15 @@ var _ Installer = new(LocalInstaller)
 
 func TestLocalInstaller(t *testing.T) {
 	// Make a temp dir
-	tdir, err := ioutil.TempDir("", "helm-installer-")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tdir)
+	tdir := t.TempDir()
 	if err := ioutil.WriteFile(filepath.Join(tdir, "plugin.yaml"), []byte{}, 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	source := "../testdata/plugdir/echo"
+	source := "../testdata/plugdir/good/echo"
 	i, err := NewForSource(source, "")
 	if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
 
 	if err := Install(i); err != nil {
@@ -48,6 +44,7 @@ func TestLocalInstaller(t *testing.T) {
 	}
 
 	if i.Path() != helmpath.DataPath("plugins", "echo") {
-		t.Errorf("expected path '$XDG_CONFIG_HOME/helm/plugins/helm-env', got %q", i.Path())
+		t.Fatalf("expected path '$XDG_CONFIG_HOME/helm/plugins/helm-env', got %q", i.Path())
 	}
+	defer os.RemoveAll(filepath.Dir(helmpath.DataPath())) // helmpath.DataPath is like /tmp/helm013130971/helm
 }

@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-var chartPath = "./../../pkg/chartutil/testdata/subpop/charts/subchart1"
+var chartPath = "testdata/testcharts/subchart"
 
 func TestTemplateCmd(t *testing.T) {
 	tests := []cmdTestCase{
@@ -43,7 +43,7 @@ func TestTemplateCmd(t *testing.T) {
 		},
 		{
 			name:   "check name template",
-			cmd:    fmt.Sprintf(`template '%s' --name-template='foobar-{{ b64enc "abc" }}-baz'`, chartPath),
+			cmd:    fmt.Sprintf(`template '%s' --name-template='foobar-{{ b64enc "abc" | lower }}-baz'`, chartPath),
 			golden: "output/template-name-template.txt",
 		},
 		{
@@ -62,7 +62,7 @@ func TestTemplateCmd(t *testing.T) {
 			name:      "check chart bad type",
 			cmd:       fmt.Sprintf("template '%s'", "testdata/testcharts/chart-bad-type"),
 			wantError: true,
-			golden:    "output/install-chart-bad-type.txt",
+			golden:    "output/template-chart-bad-type.txt",
 		},
 		{
 			name:   "check chart with dependency which is an app chart acting as a library chart",
@@ -73,6 +73,11 @@ func TestTemplateCmd(t *testing.T) {
 			name:   "check chart with dependency which is an app chart archive acting as a library chart",
 			cmd:    fmt.Sprintf("template '%s'", "testdata/testcharts/chart-with-template-lib-archive-dep"),
 			golden: "output/template-chart-with-template-lib-archive-dep.txt",
+		},
+		{
+			name:   "check kube version",
+			cmd:    fmt.Sprintf("template --kube-version 1.16.0 '%s'", chartPath),
+			golden: "output/template-with-kube-version.txt",
 		},
 		{
 			name:   "check kube api versions",
@@ -95,6 +100,13 @@ func TestTemplateCmd(t *testing.T) {
 			golden: "output/template-show-only-multiple.txt",
 		},
 		{
+			name:   "template with show-only glob",
+			cmd:    fmt.Sprintf("template '%s' --show-only templates/subdir/role*", chartPath),
+			golden: "output/template-show-only-glob.txt",
+			// Repeat to ensure manifest ordering regressions are caught
+			repeat: 10,
+		},
+		{
 			name:   "sorted output of manifests (order of filenames, then order of objects within each YAML file)",
 			cmd:    fmt.Sprintf("template '%s'", "testdata/testcharts/object-order"),
 			golden: "output/object-order.txt",
@@ -114,6 +126,48 @@ func TestTemplateCmd(t *testing.T) {
 			wantError: true,
 			golden:    "output/template-with-invalid-yaml-debug.txt",
 		},
+		{
+			name:   "template skip-tests",
+			cmd:    fmt.Sprintf(`template '%s' --skip-tests`, chartPath),
+			golden: "output/template-skip-tests.txt",
+		},
 	}
 	runTestCmd(t, tests)
+}
+
+func TestTemplateVersionCompletion(t *testing.T) {
+	repoFile := "testdata/helmhome/helm/repositories.yaml"
+	repoCache := "testdata/helmhome/helm/repository"
+
+	repoSetup := fmt.Sprintf("--repository-config %s --repository-cache %s", repoFile, repoCache)
+
+	tests := []cmdTestCase{{
+		name:   "completion for template version flag with release name",
+		cmd:    fmt.Sprintf("%s __complete template releasename testing/alpine --version ''", repoSetup),
+		golden: "output/version-comp.txt",
+	}, {
+		name:   "completion for template version flag with generate-name",
+		cmd:    fmt.Sprintf("%s __complete template --generate-name testing/alpine --version ''", repoSetup),
+		golden: "output/version-comp.txt",
+	}, {
+		name:   "completion for template version flag too few args",
+		cmd:    fmt.Sprintf("%s __complete template testing/alpine --version ''", repoSetup),
+		golden: "output/version-invalid-comp.txt",
+	}, {
+		name:   "completion for template version flag too many args",
+		cmd:    fmt.Sprintf("%s __complete template releasename testing/alpine badarg --version ''", repoSetup),
+		golden: "output/version-invalid-comp.txt",
+	}, {
+		name:   "completion for template version flag invalid chart",
+		cmd:    fmt.Sprintf("%s __complete template releasename invalid/invalid --version ''", repoSetup),
+		golden: "output/version-invalid-comp.txt",
+	}}
+	runTestCmd(t, tests)
+}
+
+func TestTemplateFileCompletion(t *testing.T) {
+	checkFileCompletion(t, "template", false)
+	checkFileCompletion(t, "template --generate-name", true)
+	checkFileCompletion(t, "template myname", true)
+	checkFileCompletion(t, "template myname mychart", false)
 }

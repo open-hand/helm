@@ -55,6 +55,11 @@ func TestRollbackCmd(t *testing.T) {
 		golden: "output/rollback-wait.txt",
 		rels:   rels,
 	}, {
+		name:   "rollback a release with wait-for-jobs",
+		cmd:    "rollback funny-honey 1 --wait --wait-for-jobs",
+		golden: "output/rollback-wait-for-jobs.txt",
+		rels:   rels,
+	}, {
 		name:   "rollback a release without revision",
 		cmd:    "rollback funny-honey",
 		golden: "output/rollback-no-revision.txt",
@@ -67,4 +72,46 @@ func TestRollbackCmd(t *testing.T) {
 		wantError: true,
 	}}
 	runTestCmd(t, tests)
+}
+
+func TestRollbackRevisionCompletion(t *testing.T) {
+	mk := func(name string, vers int, status release.Status) *release.Release {
+		return release.Mock(&release.MockReleaseOptions{
+			Name:    name,
+			Version: vers,
+			Status:  status,
+		})
+	}
+
+	releases := []*release.Release{
+		mk("musketeers", 11, release.StatusDeployed),
+		mk("musketeers", 10, release.StatusSuperseded),
+		mk("musketeers", 9, release.StatusSuperseded),
+		mk("musketeers", 8, release.StatusSuperseded),
+		mk("carabins", 1, release.StatusSuperseded),
+	}
+
+	tests := []cmdTestCase{{
+		name:   "completion for release parameter",
+		cmd:    "__complete rollback ''",
+		rels:   releases,
+		golden: "output/rollback-comp.txt",
+	}, {
+		name:   "completion for revision parameter",
+		cmd:    "__complete rollback musketeers ''",
+		rels:   releases,
+		golden: "output/revision-comp.txt",
+	}, {
+		name:   "completion for with too many args",
+		cmd:    "__complete rollback musketeers 11 ''",
+		rels:   releases,
+		golden: "output/rollback-wrong-args-comp.txt",
+	}}
+	runTestCmd(t, tests)
+}
+
+func TestRollbackFileCompletion(t *testing.T) {
+	checkFileCompletion(t, "rollback", false)
+	checkFileCompletion(t, "rollback myrelease", false)
+	checkFileCompletion(t, "rollback myrelease 1", false)
 }

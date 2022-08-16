@@ -40,15 +40,6 @@ type HelperT interface {
 	Helper()
 }
 
-// AssertGoldenBytes asserts that the give actual content matches the contents of the given filename
-func AssertGoldenBytes(t TestingT, actual []byte, filename string) {
-	t.Helper()
-
-	if err := compare(actual, path(filename)); err != nil {
-		t.Fatalf("%v", err)
-	}
-}
-
 // AssertGoldenString asserts that the given string matches the contents of the given file.
 func AssertGoldenString(t TestingT, actual, filename string) {
 	t.Helper()
@@ -58,7 +49,7 @@ func AssertGoldenString(t TestingT, actual, filename string) {
 	}
 }
 
-// AssertGoldenFile assers that the content of the actual file matches the contents of the expected file
+// AssertGoldenFile asserts that the content of the actual file matches the contents of the expected file
 func AssertGoldenFile(t TestingT, actualFileName string, expectedFilename string) {
 	t.Helper()
 
@@ -66,7 +57,7 @@ func AssertGoldenFile(t TestingT, actualFileName string, expectedFilename string
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	AssertGoldenBytes(t, actual, expectedFilename)
+	AssertGoldenString(t, string(actual), expectedFilename)
 }
 
 func path(filename string) string {
@@ -77,6 +68,7 @@ func path(filename string) string {
 }
 
 func compare(actual []byte, filename string) error {
+	actual = normalize(actual)
 	if err := update(filename, actual); err != nil {
 		return err
 	}
@@ -85,6 +77,7 @@ func compare(actual []byte, filename string) error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to read testdata %s", filename)
 	}
+	expected = normalize(expected)
 	if !bytes.Equal(expected, actual) {
 		return errors.Errorf("does not match golden file %s\n\nWANT:\n'%s'\n\nGOT:\n'%s'\n", filename, expected, actual)
 	}

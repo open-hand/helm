@@ -16,6 +16,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -40,7 +41,7 @@ If no lock file is found, 'helm dependency build' will mirror the behavior
 of 'helm dependency update'.
 `
 
-func newDependencyBuildCmd(out io.Writer) *cobra.Command {
+func newDependencyBuildCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	client := action.NewDependency()
 
 	cmd := &cobra.Command{
@@ -57,7 +58,9 @@ func newDependencyBuildCmd(out io.Writer) *cobra.Command {
 				Out:              out,
 				ChartPath:        chartpath,
 				Keyring:          client.Keyring,
+				SkipUpdate:       client.SkipRefresh,
 				Getters:          getter.All(settings),
+				RegistryClient:   cfg.RegistryClient,
 				RepositoryConfig: settings.RepositoryConfig,
 				RepositoryCache:  settings.RepositoryCache,
 				Debug:            settings.Debug,
@@ -65,13 +68,18 @@ func newDependencyBuildCmd(out io.Writer) *cobra.Command {
 			if client.Verify {
 				man.Verify = downloader.VerifyIfPossible
 			}
-			return man.Build()
+			err := man.Build()
+			if e, ok := err.(downloader.ErrRepoNotFound); ok {
+				return fmt.Errorf("%s. Please add the missing repos via 'helm repo add'", e.Error())
+			}
+			return err
 		},
 	}
 
 	f := cmd.Flags()
 	f.BoolVar(&client.Verify, "verify", false, "verify the packages against signatures")
 	f.StringVar(&client.Keyring, "keyring", defaultKeyring(), "keyring containing public keys")
+	f.BoolVar(&client.SkipRefresh, "skip-refresh", false, "do not refresh the local repository cache")
 
 	return cmd
 }

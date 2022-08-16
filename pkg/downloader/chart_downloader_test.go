@@ -16,7 +16,6 @@ limitations under the License.
 package downloader
 
 import (
-	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -71,7 +70,7 @@ func TestResolveChartRef(t *testing.T) {
 			if tt.fail {
 				continue
 			}
-			t.Errorf("%s: failed with error %s", tt.name, err)
+			t.Errorf("%s: failed with error %q", tt.name, err)
 			continue
 		}
 		if got := u.String(); got != tt.expect {
@@ -171,19 +170,7 @@ func TestIsTar(t *testing.T) {
 }
 
 func TestDownloadTo(t *testing.T) {
-	// Set up a fake repo with basic auth enabled
-	srv, err := repotest.NewTempServer("testdata/*.tgz*")
-	srv.Stop()
-	if err != nil {
-		t.Fatal(err)
-	}
-	srv.WithMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username, password, ok := r.BasicAuth()
-		if !ok || username != "username" || password != "password" {
-			t.Errorf("Expected request to use basic auth and for username == 'username' and password == 'password', got '%v', '%s', '%s'", ok, username, password)
-		}
-	}))
-	srv.Start()
+	srv := repotest.NewTempServerWithCleanupAndBasicAuth(t, "testdata/*.tgz*")
 	defer srv.Stop()
 	if err := srv.CreateIndex(); err != nil {
 		t.Fatal(err)
@@ -205,6 +192,7 @@ func TestDownloadTo(t *testing.T) {
 		}),
 		Options: []getter.Option{
 			getter.WithBasicAuth("username", "password"),
+			getter.WithPassCredentialsAll(false),
 		},
 	}
 	cname := "/signtest-0.1.0.tgz"
@@ -229,7 +217,7 @@ func TestDownloadTo(t *testing.T) {
 
 func TestDownloadTo_TLS(t *testing.T) {
 	// Set up mock server w/ tls enabled
-	srv, err := repotest.NewTempServer("testdata/*.tgz*")
+	srv, err := repotest.NewTempServerWithCleanup(t, "testdata/*.tgz*")
 	srv.Stop()
 	if err != nil {
 		t.Fatal(err)
@@ -283,9 +271,10 @@ func TestDownloadTo_VerifyLater(t *testing.T) {
 	defer ensure.HelmHome(t)()
 
 	dest := ensure.TempDir(t)
+	defer os.RemoveAll(dest)
 
 	// Set up a fake repo
-	srv, err := repotest.NewTempServer("testdata/*.tgz*")
+	srv, err := repotest.NewTempServerWithCleanup(t, "testdata/*.tgz*")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,8 +17,8 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"io"
-	"strings"
 
 	"github.com/gosuri/uitable"
 	"github.com/pkg/errors"
@@ -32,13 +32,14 @@ import (
 func newRepoListCmd(out io.Writer) *cobra.Command {
 	var outfmt output.Format
 	cmd := &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls"},
-		Short:   "list chart repositories",
-		Args:    require.NoArgs,
+		Use:               "list",
+		Aliases:           []string{"ls"},
+		Short:             "list chart repositories",
+		Args:              require.NoArgs,
+		ValidArgsFunction: noCompletions,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			f, err := repo.LoadFile(settings.RepositoryConfig)
-			if isNotExist(err) || len(f.Repositories) == 0 {
+			if isNotExist(err) || (len(f.Repositories) == 0 && !(outfmt == output.JSON || outfmt == output.YAML)) {
 				return errors.New("no repositories to show")
 			}
 
@@ -97,16 +98,39 @@ func (r *repoListWriter) encodeByFormat(out io.Writer, format output.Format) err
 	return nil
 }
 
+// Returns all repos from repos, except those with names matching ignoredRepoNames
+// Inspired by https://stackoverflow.com/a/28701031/893211
+func filterRepos(repos []*repo.Entry, ignoredRepoNames []string) []*repo.Entry {
+	// if ignoredRepoNames is nil, just return repo
+	if ignoredRepoNames == nil {
+		return repos
+	}
+
+	filteredRepos := make([]*repo.Entry, 0)
+
+	ignored := make(map[string]bool, len(ignoredRepoNames))
+	for _, repoName := range ignoredRepoNames {
+		ignored[repoName] = true
+	}
+
+	for _, repo := range repos {
+		if _, removed := ignored[repo.Name]; !removed {
+			filteredRepos = append(filteredRepos, repo)
+		}
+	}
+
+	return filteredRepos
+}
+
 // Provide dynamic auto-completion for repo names
-func compListRepos(prefix string) []string {
+func compListRepos(prefix string, ignoredRepoNames []string) []string {
 	var rNames []string
 
 	f, err := repo.LoadFile(settings.RepositoryConfig)
 	if err == nil && len(f.Repositories) > 0 {
-		for _, repo := range f.Repositories {
-			if strings.HasPrefix(repo.Name, prefix) {
-				rNames = append(rNames, repo.Name)
-			}
+		filteredRepos := filterRepos(f.Repositories, ignoredRepoNames)
+		for _, repo := range filteredRepos {
+			rNames = append(rNames, fmt.Sprintf("%s\t%s", repo.Name, repo.URL))
 		}
 	}
 	return rNames

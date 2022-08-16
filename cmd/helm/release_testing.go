@@ -19,14 +19,15 @@ package main
 import (
 	"fmt"
 	"io"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
-	"github.com/open-hand/helm/cmd/helm/require"
-	"github.com/open-hand/helm/internal/completion"
-	"github.com/open-hand/helm/pkg/action"
-	"github.com/open-hand/helm/pkg/cli/output"
+	"helm.sh/helm/v3/cmd/helm/require"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/cli/output"
 )
 
 const releaseTestHelp = `
@@ -40,14 +41,29 @@ func newReleaseTestCmd(cfg *action.Configuration, out io.Writer) *cobra.Command 
 	client := action.NewReleaseTesting(cfg)
 	var outfmt = output.Table
 	var outputLogs bool
+	var filter []string
 
 	cmd := &cobra.Command{
 		Use:   "test [RELEASE]",
 		Short: "run tests for a release",
 		Long:  releaseTestHelp,
 		Args:  require.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			return compListReleases(toComplete, args, cfg)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.Namespace = settings.Namespace()
+			notName := regexp.MustCompile(`^!\s?name=`)
+			for _, f := range filter {
+				if strings.HasPrefix(f, "name=") {
+					client.Filters["name"] = append(client.Filters["name"], strings.TrimPrefix(f, "name="))
+				} else if notName.MatchString(f) {
+					client.Filters["!name"] = append(client.Filters["!name"], notName.ReplaceAllLiteralString(f, ""))
+				}
+			}
 			rel, runErr := client.Run(args[0])
 			// We only return an error if we weren't even able to get the
 			// release, otherwise we keep going so we can print status and logs
@@ -56,7 +72,7 @@ func newReleaseTestCmd(cfg *action.Configuration, out io.Writer) *cobra.Command 
 				return runErr
 			}
 
-			if err := outfmt.Write(out, &statusPrinter{rel, settings.Debug}); err != nil {
+			if err := outfmt.Write(out, &statusPrinter{rel, settings.Debug, false}); err != nil {
 				return err
 			}
 
@@ -72,17 +88,10 @@ func newReleaseTestCmd(cfg *action.Configuration, out io.Writer) *cobra.Command 
 		},
 	}
 
-	// Function providing dynamic auto-completion
-	completion.RegisterValidArgsFunc(cmd, func(cmd *cobra.Command, args []string, toComplete string) ([]string, completion.BashCompDirective) {
-		if len(args) != 0 {
-			return nil, completion.BashCompDirectiveNoFileComp
-		}
-		return compListReleases(toComplete, cfg)
-	})
-
 	f := cmd.Flags()
 	f.DurationVar(&client.Timeout, "timeout", 300*time.Second, "time to wait for any individual Kubernetes operation (like Jobs for hooks)")
-	f.BoolVar(&outputLogs, "logs", false, "Dump the logs from test pods (this runs after all tests are complete, but before any cleanup)")
+	f.BoolVar(&outputLogs, "logs", false, "dump the logs from test pods (this runs after all tests are complete, but before any cleanup)")
+	f.StringSliceVar(&filter, "filter", []string{}, "specify tests by attribute (currently \"name\") using attribute=value syntax or '!attribute=value' to exclude a test (can specify multiple or separate values with commas: name=test1,name=test2)")
 
 	return cmd
 }

@@ -16,31 +16,30 @@ limitations under the License.
 package installer // import "helm.sh/helm/v3/pkg/plugin/installer"
 
 import (
-	"os"
 	"path/filepath"
 
-	"github.com/open-hand/helm/pkg/helmpath"
+	"helm.sh/helm/v3/pkg/cli"
 )
 
 type base struct {
 	// Source is the reference to a plugin
 	Source string
+	// PluginsDirectory is the directory where plugins are installed
+	PluginsDirectory string
 }
 
 func newBase(source string) base {
-	return base{source}
+	settings := cli.New()
+	return base{
+		Source:           source,
+		PluginsDirectory: settings.PluginsDirectory,
+	}
 }
 
-// link creates a symlink from the plugin source to the base path.
-func (b *base) link(from string) error {
-	debug("symlinking %s to %s", from, b.Path())
-	return os.Symlink(from, b.Path())
-}
-
-// Path is where the plugin will be symlinked to.
+// Path is where the plugin will be installed.
 func (b *base) Path() string {
 	if b.Source == "" {
 		return ""
 	}
-	return helmpath.DataPath("plugins", filepath.Base(b.Source))
+	return filepath.Join(b.PluginsDirectory, filepath.Base(b.Source))
 }
