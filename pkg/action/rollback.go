@@ -24,9 +24,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/release"
-	helmtime "helm.sh/helm/v3/pkg/time"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/release"
+	helmtime "github.com/open-hand/helm/pkg/time"
 )
 
 // Rollback is the action for rolling back to a given release.
@@ -157,7 +157,7 @@ func (r *Rollback) performRollback(currentRelease, targetRelease *release.Releas
 
 	// pre-rollback hooks
 	if !r.DisableHooks {
-		if err := r.cfg.execHook(targetRelease, release.HookPreRollback, r.Timeout); err != nil {
+		if err := r.cfg.execHook(targetRelease, release.HookPostRollback, r.Timeout, nil, 0, "", 0, "", "", "", "", "", "", "", "", false); err != nil {
 			return targetRelease, err
 		}
 	} else {
@@ -224,7 +224,7 @@ func (r *Rollback) performRollback(currentRelease, targetRelease *release.Releas
 
 	// post-rollback hooks
 	if !r.DisableHooks {
-		if err := r.cfg.execHook(targetRelease, release.HookPostRollback, r.Timeout); err != nil {
+		if err := r.cfg.execHook(targetRelease, release.HookPostRollback, r.Timeout, nil, 0, "", 0, "", "", "", "", "", "", "", "", false); err != nil {
 			return targetRelease, err
 		}
 	}

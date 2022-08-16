@@ -18,11 +18,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/open-hand/helm/pkg/cli/values"
+	"github.com/open-hand/helm/pkg/getter"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"io"
 
-	"helm.sh/helm/v3/cmd/helm/require"
-	"helm.sh/helm/v3/pkg/action"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/pkg/action"
 )
 
 const showDesc = `
@@ -63,7 +66,6 @@ func newShowCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	client := action.NewShowWithConfig(action.ShowAll, cfg)
 
 	client.Namespace = settings.Namespace()
-
 
 	showCommand := &cobra.Command{
 		Use:               "show",
@@ -158,7 +160,7 @@ func newShowCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 		ValidArgsFunction: validArgsFunc,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.OutputFormat = action.ShowCRDs
-			output, err := runShow(args, client)
+			output, err := runShow(args, client, nil)
 			if err != nil {
 				return err
 			}

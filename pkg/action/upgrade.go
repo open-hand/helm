@@ -19,22 +19,25 @@ package action
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
+	"github.com/open-hand/helm/pkg/agent/action"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/resource"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/kube"
-	"helm.sh/helm/v3/pkg/postrender"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/kube"
+	"github.com/open-hand/helm/pkg/postrender"
+	"github.com/open-hand/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/releaseutil"
+	"github.com/open-hand/helm/pkg/storage/driver"
 )
 
 // Upgrade is the action for upgrading releases.
@@ -323,7 +326,7 @@ func (u *Upgrade) performUpgrade(ctx context.Context, originalRelease, upgradedR
 	if u.ChartName != "choerodon-cluster-agent" {
 		// 在这里对要新chart包中的对象添加标签
 		for _, r := range target {
-			err = action.AddLabel(u.ImagePullSecret, u.Command, u.V1Command, u.AppServiceId, u.V1AppServiceId, r, u.Commit, u.ChartVersion, u.ReleaseName, u.ChartName, u.AgentVersion, "", originalRelease.Namespace, false, true, u.cfg.ClientSet)
+			err = action.AddLabel(u.ImagePullSecret, u.Command, u.V1Command, u.AppServiceId, u.V1AppServiceId, r, u.Commit, u.ChartVersion, u.ReleaseName, u.ChartName, u.AgentVersion, "", originalRelease.Namespace, false)
 			if err != nil {
 				return nil, err
 			}

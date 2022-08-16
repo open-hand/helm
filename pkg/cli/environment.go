@@ -24,14 +24,13 @@ package cli
 
 import (
 	"fmt"
+	"github.com/open-hand/helm/pkg/helmpath"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	"helm.sh/helm/v3/pkg/helmpath"
 )
 
 // defaultMaxHistory sets the maximum number of releases to 0: unlimited
@@ -115,10 +114,6 @@ func (s *EnvSettings) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&s.RegistryConfig, "registry-config", s.RegistryConfig, "path to the registry config file")
 	fs.StringVar(&s.RepositoryConfig, "repository-config", s.RepositoryConfig, "path to the file containing repository names and URLs")
 	fs.StringVar(&s.RepositoryCache, "repository-cache", s.RepositoryCache, "path to the file containing cached repository indexes")
-}
-
-func (s *EnvSettings) SetNamespace(namespace string) {
-	s.namespace = namespace
 }
 
 func envOr(name, def string) string {

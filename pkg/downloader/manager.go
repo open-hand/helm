@@ -34,16 +34,16 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/internal/resolver"
-	"helm.sh/helm/v3/internal/third_party/dep/fs"
-	"helm.sh/helm/v3/internal/urlutil"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/helmpath"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/repo"
+	"github.com/open-hand/helm/internal/resolver"
+	"github.com/open-hand/helm/internal/third_party/dep/fs"
+	"github.com/open-hand/helm/internal/urlutil"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart/loader"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/registry"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // ErrRepoNotFound indicates that chart repositories can't be found in local repo cache.
@@ -670,7 +670,8 @@ func (m *Manager) parallelRepoUpdate(repos []*repo.Entry) error {
 		}
 		wg.Add(1)
 		go func(r *repo.ChartRepository) {
-			if _, err := r.DownloadIndexFile(); err != nil {
+			if _, _, err := r.DownloadIndexFile()
+				err != nil {
 				// For those dependencies that are not known to helm and using a
 				// generated key name we display the repo url.
 				if strings.HasPrefix(r.Config.Name, managerKeyPrefix) {

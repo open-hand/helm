@@ -32,9 +32,9 @@ import (
 	"golang.org/x/term"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/cmd/helm/require"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/repo"
+	"github.com/open-hand/helm/cmd/helm/require"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // Repositories that have been permanently deleted and no longer work
@@ -207,7 +207,7 @@ func (o *repoAddOptions) run(out io.Writer) error {
 	if o.repoCache != "" {
 		r.CachePath = o.repoCache
 	}
-	if _, err := r.DownloadIndexFile(); err != nil {
+	if _, _, err := r.DownloadIndexFile(); err != nil {
 		return errors.Wrapf(err, "looks like %q is not a valid chart repository or cannot be reached", o.url)
 	}
 

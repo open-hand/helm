@@ -20,10 +20,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"helm.sh/helm/v3/internal/test/ensure"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/lint/support"
+	"github.com/open-hand/helm/internal/test/ensure"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/lint/support"
 )
 
 func chartWithBadDependencies() chart.Chart {

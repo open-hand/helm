@@ -17,12 +17,11 @@ limitations under the License.
 package fileutil
 
 import (
+	"github.com/open-hand/helm/internal/third_party/dep/fs"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	"helm.sh/helm/v3/internal/third_party/dep/fs"
 )
 
 // AtomicWriteFile atomically (as atomic as os.Rename allows) writes a file to a

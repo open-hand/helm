@@ -21,8 +21,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
+	"github.com/open-hand/helm/pkg/agent/action"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -38,20 +38,19 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/downloader"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/kube"
-	kubefake "helm.sh/helm/v3/pkg/kube/fake"
-	"helm.sh/helm/v3/pkg/postrender"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
-	"helm.sh/helm/v3/pkg/repo"
-	"helm.sh/helm/v3/pkg/storage"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/downloader"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/kube"
+	kubefake "github.com/open-hand/helm/pkg/kube/fake"
+	"github.com/open-hand/helm/pkg/postrender"
+	"github.com/open-hand/helm/pkg/registry"
+	"github.com/open-hand/helm/pkg/release"
+	"github.com/open-hand/helm/pkg/releaseutil"
+	"github.com/open-hand/helm/pkg/storage"
+	"github.com/open-hand/helm/pkg/storage/driver"
 )
 
 // NOTESFILE_SUFFIX that we want to treat special. It goes through the templating engine
@@ -316,7 +315,7 @@ func (i *Install) RunWithContext(ctx context.Context, chrt *chart.Chart, vals ma
 
 	// 在这里对要创建的对象添加标签
 	for _, r := range resources {
-		err = action.AddLabel(i.ImagePullSecret, i.Command, i.V1Command, i.AppServiceId, i.V1AppServiceId, r, i.Commit, i.ChartVersion, i.ReleaseName, i.ChartName, i.AgentVersion, i.TestLabel, i.Namespace, i.IsTest, false, nil)
+		err = action.AddLabel(i.ImagePullSecret, i.Command, i.V1Command, i.AppServiceId, i.V1AppServiceId, r, i.Commit, i.ChartVersion, i.ReleaseName, i.ChartName, i.AgentVersion, i.TestLabel, i.Namespace, i.IsTest)
 		if err != nil {
 			return nil, err
 		}

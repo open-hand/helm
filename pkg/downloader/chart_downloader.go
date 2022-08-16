@@ -26,13 +26,13 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
 
-	"helm.sh/helm/v3/internal/fileutil"
-	"helm.sh/helm/v3/internal/urlutil"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/helmpath"
-	"helm.sh/helm/v3/pkg/provenance"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/repo"
+	"github.com/open-hand/helm/internal/fileutil"
+	"github.com/open-hand/helm/internal/urlutil"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/helmpath"
+	"github.com/open-hand/helm/pkg/provenance"
+	"github.com/open-hand/helm/pkg/registry"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // VerificationStrategy describes a strategy for determining whether to verify a chart.

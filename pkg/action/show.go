@@ -25,9 +25,10 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 	"sigs.k8s.io/yaml"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart/loader"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 // ShowOutputFormat is the format of the output of `helm show`
@@ -130,7 +131,7 @@ func (s *Show) Run(chartpath string, vals map[string]interface{}) (string, error
 		if s.OutputFormat == ShowAll {
 			fmt.Fprintln(&out, "\n--- Hooks")
 		}
-		hooks, err := s.FindHooks(chrt, vals)
+		hooks, err := s.FindHooks(s.chart, vals)
 		if err != nil {
 			return "", nil
 		}
@@ -188,7 +189,7 @@ func (s *Show) FindHooks(chrt *chart.Chart, vals map[string]interface{}) ([]*rel
 		return nil, err
 	}
 	valuesToRender, err := chartutil.ToRenderValues(chrt, vals, options, caps)
-	hooks, _, _, err := s.cfg.renderResources(chrt, valuesToRender, chrt.Name(), "", false, true, false, nil)
+	hooks, _, _, err := s.cfg.renderResources(chrt, valuesToRender, chrt.Name(), "", false, true, false, nil, false)
 	if err != nil {
 		return nil, err
 	}

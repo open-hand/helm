@@ -23,9 +23,9 @@ import (
 	"strings"
 	"testing"
 
-	"helm.sh/helm/v3/internal/test/ensure"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
+	"github.com/open-hand/helm/internal/test/ensure"
+	"github.com/open-hand/helm/pkg/chart"
+	"github.com/open-hand/helm/pkg/chart/loader"
 )
 
 func TestPackage(t *testing.T) {

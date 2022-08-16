@@ -25,12 +25,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/downloader"
-	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/repo"
+	"github.com/open-hand/helm/pkg/chartutil"
+	"github.com/open-hand/helm/pkg/cli"
+	"github.com/open-hand/helm/pkg/downloader"
+	"github.com/open-hand/helm/pkg/getter"
+	"github.com/open-hand/helm/pkg/registry"
+	"github.com/open-hand/helm/pkg/repo"
 )
 
 // Pull is the action for checking a given release's information.
@@ -116,7 +116,7 @@ func (p *Pull) Run(chartRef string) (string, error) {
 	}
 
 	if p.RepoURL != "" {
-		chartURL, err := repo.FindChartInAuthAndTLSAndPassRepoURL(p.RepoURL, p.Username, p.Password, chartRef, p.Version, p.CertFile, p.KeyFile, p.CaFile, p.InsecureSkipTLSverify, p.PassCredentialsAll, getter.All(p.Settings))
+		chartURL, err := repo.FindChartInAuthRepoURL(p.RepoURL, p.Username, p.Password, chartRef, p.Version, p.CertFile, p.KeyFile, p.CaFile, getter.All(p.Settings))
 		if err != nil {
 			return out.String(), err
 		}
