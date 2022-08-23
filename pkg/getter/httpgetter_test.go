@@ -17,12 +17,16 @@ package getter
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -45,13 +49,18 @@ func TestHTTPGetter(t *testing.T) {
 	join := filepath.Join
 	ca, pub, priv := join(cd, "rootca.crt"), join(cd, "crt.pem"), join(cd, "key.pem")
 	insecure := false
+	timeout := time.Second * 5
+	transport := &http.Transport{}
 
 	// Test with options
 	g, err = NewHTTPGetter(
 		WithBasicAuth("I", "Am"),
+		WithPassCredentialsAll(false),
 		WithUserAgent("Groot"),
 		WithTLSClientConfig(pub, priv, ca),
 		WithInsecureSkipVerifyTLS(insecure),
+		WithTimeout(timeout),
+		WithTransport(transport),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -68,6 +77,10 @@ func TestHTTPGetter(t *testing.T) {
 
 	if hg.opts.password != "Am" {
 		t.Errorf("Expected NewHTTPGetter to contain %q as the password, got %q", "Am", hg.opts.password)
+	}
+
+	if hg.opts.passCredentialsAll != false {
+		t.Errorf("Expected NewHTTPGetter to contain %t as PassCredentialsAll, got %t", false, hg.opts.passCredentialsAll)
 	}
 
 	if hg.opts.userAgent != "Groot" {
@@ -90,6 +103,14 @@ func TestHTTPGetter(t *testing.T) {
 		t.Errorf("Expected NewHTTPGetter to contain %t as InsecureSkipVerifyTLs flag, got %t", false, hg.opts.insecureSkipVerifyTLS)
 	}
 
+	if hg.opts.timeout != timeout {
+		t.Errorf("Expected NewHTTPGetter to contain %s as Timeout flag, got %s", timeout, hg.opts.timeout)
+	}
+
+	if hg.opts.transport != transport {
+		t.Errorf("Expected NewHTTPGetter to contain %p as Transport, got %p", transport, hg.opts.transport)
+	}
+
 	// Test if setting insecureSkipVerifyTLS is being passed to the ops
 	insecure = true
 
@@ -108,6 +129,28 @@ func TestHTTPGetter(t *testing.T) {
 	if hg.opts.insecureSkipVerifyTLS != insecure {
 		t.Errorf("Expected NewHTTPGetter to contain %t as InsecureSkipVerifyTLs flag, got %t", insecure, hg.opts.insecureSkipVerifyTLS)
 	}
+
+	// Checking false by default
+	if hg.opts.passCredentialsAll != false {
+		t.Errorf("Expected NewHTTPGetter to contain %t as PassCredentialsAll, got %t", false, hg.opts.passCredentialsAll)
+	}
+
+	// Test setting PassCredentialsAll
+	g, err = NewHTTPGetter(
+		WithBasicAuth("I", "Am"),
+		WithPassCredentialsAll(true),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hg, ok = g.(*HTTPGetter)
+	if !ok {
+		t.Fatal("expected NewHTTPGetter to produce an *HTTPGetter")
+	}
+	if hg.opts.passCredentialsAll != true {
+		t.Errorf("Expected NewHTTPGetter to contain %t as PassCredentialsAll, got %t", true, hg.opts.passCredentialsAll)
+	}
 }
 
 func TestDownload(t *testing.T) {
@@ -122,7 +165,7 @@ func TestDownload(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	g, err := All(new(cli.EnvSettings)).ByScheme("http")
+	g, err := All(cli.New()).ByScheme("http")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +196,78 @@ func TestDownload(t *testing.T) {
 	httpgetter, err := NewHTTPGetter(
 		WithURL(u.String()),
 		WithBasicAuth("username", "password"),
+		WithPassCredentialsAll(false),
 		WithUserAgent(expectedUserAgent),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err = httpgetter.Get(u.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.String() != expect {
+		t.Errorf("Expected %q, got %q", expect, got.String())
+	}
+
+	// test with Get URL differing from withURL
+	crossAuthSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username, password, ok := r.BasicAuth()
+		if ok || username == "username" || password == "password" {
+			t.Errorf("Expected request to not include but got '%v', '%s', '%s'", ok, username, password)
+		}
+		fmt.Fprint(w, expect)
+	}))
+
+	defer crossAuthSrv.Close()
+
+	u, _ = url.ParseRequestURI(crossAuthSrv.URL)
+
+	// A different host is provided for the WithURL from the one used for Get
+	u2, _ := url.ParseRequestURI(crossAuthSrv.URL)
+	host := strings.Split(u2.Host, ":")
+	host[0] = host[0] + "a"
+	u2.Host = strings.Join(host, ":")
+	httpgetter, err = NewHTTPGetter(
+		WithURL(u2.String()),
+		WithBasicAuth("username", "password"),
+		WithPassCredentialsAll(false),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err = httpgetter.Get(u.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.String() != expect {
+		t.Errorf("Expected %q, got %q", expect, got.String())
+	}
+
+	// test with Get URL differing from withURL and should pass creds
+	crossAuthSrv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username, password, ok := r.BasicAuth()
+		if !ok || username != "username" || password != "password" {
+			t.Errorf("Expected request to use basic auth and for username == 'username' and password == 'password', got '%v', '%s', '%s'", ok, username, password)
+		}
+		fmt.Fprint(w, expect)
+	}))
+
+	defer crossAuthSrv.Close()
+
+	u, _ = url.ParseRequestURI(crossAuthSrv.URL)
+
+	// A different host is provided for the WithURL from the one used for Get
+	u2, _ = url.ParseRequestURI(crossAuthSrv.URL)
+	host = strings.Split(u2.Host, ":")
+	host[0] = host[0] + "a"
+	u2.Host = strings.Join(host, ":")
+	httpgetter, err = NewHTTPGetter(
+		WithURL(u2.String()),
+		WithBasicAuth("username", "password"),
+		WithPassCredentialsAll(true),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -223,7 +337,7 @@ func TestDownloadInsecureSkipTLSVerify(t *testing.T) {
 
 	u, _ := url.ParseRequestURI(ts.URL)
 
-	// Ensure the default behaviour did not change
+	// Ensure the default behavior did not change
 	g, err := NewHTTPGetter(
 		WithURL(u.String()),
 	)
@@ -247,4 +361,172 @@ func TestDownloadInsecureSkipTLSVerify(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestHTTPGetterTarDownload(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f, _ := os.Open("testdata/empty-0.0.1.tgz")
+		defer f.Close()
+
+		b := make([]byte, 512)
+		f.Read(b)
+		//Get the file size
+		FileStat, _ := f.Stat()
+		FileSize := strconv.FormatInt(FileStat.Size(), 10)
+
+		//Simulating improper header values from bitbucket
+		w.Header().Set("Content-Type", "application/x-tar")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Length", FileSize)
+
+		f.Seek(0, 0)
+		io.Copy(w, f)
+	}))
+
+	defer srv.Close()
+
+	g, err := NewHTTPGetter(WithURL(srv.URL))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, _ := g.Get(srv.URL)
+	mimeType := http.DetectContentType(data.Bytes())
+
+	expectedMimeType := "application/x-gzip"
+	if mimeType != expectedMimeType {
+		t.Fatalf("Expected response with MIME type %s, but got %s", expectedMimeType, mimeType)
+	}
+}
+
+func TestHttpClientInsecureSkipVerify(t *testing.T) {
+	g := HTTPGetter{}
+	g.opts.url = "https://localhost"
+	verifyInsecureSkipVerify(t, &g, "Blank HTTPGetter", false)
+
+	g = HTTPGetter{}
+	g.opts.url = "https://localhost"
+	g.opts.caFile = "testdata/ca.crt"
+	verifyInsecureSkipVerify(t, &g, "HTTPGetter with ca file", false)
+
+	g = HTTPGetter{}
+	g.opts.url = "https://localhost"
+	g.opts.insecureSkipVerifyTLS = true
+	verifyInsecureSkipVerify(t, &g, "HTTPGetter with skip cert verification only", true)
+
+	g = HTTPGetter{}
+	g.opts.url = "https://localhost"
+	g.opts.certFile = "testdata/client.crt"
+	g.opts.keyFile = "testdata/client.key"
+	g.opts.insecureSkipVerifyTLS = true
+	transport := verifyInsecureSkipVerify(t, &g, "HTTPGetter with 2 way ssl", true)
+	if len(transport.TLSClientConfig.Certificates) <= 0 {
+		t.Fatal("transport.TLSClientConfig.Certificates is not present")
+	}
+	if transport.TLSClientConfig.ServerName == "" {
+		t.Fatal("TLSClientConfig.ServerName is blank")
+	}
+}
+
+func verifyInsecureSkipVerify(t *testing.T, g *HTTPGetter, caseName string, expectedValue bool) *http.Transport {
+	returnVal, err := g.httpClient()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if returnVal == nil {
+		t.Fatalf("Expected non nil value for http client")
+	}
+	transport := (returnVal.Transport).(*http.Transport)
+	gotValue := false
+	if transport.TLSClientConfig != nil {
+		gotValue = transport.TLSClientConfig.InsecureSkipVerify
+	}
+	if gotValue != expectedValue {
+		t.Fatalf("Case Name = %s\nInsecureSkipVerify did not come as expected. Expected = %t; Got = %v",
+			caseName, expectedValue, gotValue)
+	}
+	return transport
+}
+
+func TestDefaultHTTPTransportReuse(t *testing.T) {
+	g := HTTPGetter{}
+
+	httpClient1, err := g.httpClient()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if httpClient1 == nil {
+		t.Fatalf("Expected non nil value for http client")
+	}
+
+	transport1 := (httpClient1.Transport).(*http.Transport)
+
+	httpClient2, err := g.httpClient()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if httpClient2 == nil {
+		t.Fatalf("Expected non nil value for http client")
+	}
+
+	transport2 := (httpClient2.Transport).(*http.Transport)
+
+	if transport1 != transport2 {
+		t.Fatalf("Expected default transport to be reused")
+	}
+}
+
+func TestHTTPTransportOption(t *testing.T) {
+	transport := &http.Transport{}
+
+	g := HTTPGetter{}
+	g.opts.transport = transport
+	httpClient1, err := g.httpClient()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if httpClient1 == nil {
+		t.Fatalf("Expected non nil value for http client")
+	}
+
+	transport1 := (httpClient1.Transport).(*http.Transport)
+
+	if transport1 != transport {
+		t.Fatalf("Expected transport option to be applied")
+	}
+
+	httpClient2, err := g.httpClient()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if httpClient2 == nil {
+		t.Fatalf("Expected non nil value for http client")
+	}
+
+	transport2 := (httpClient2.Transport).(*http.Transport)
+
+	if transport1 != transport2 {
+		t.Fatalf("Expected applied transport to be reused")
+	}
+
+	g = HTTPGetter{}
+	g.opts.url = "https://localhost"
+	g.opts.certFile = "testdata/client.crt"
+	g.opts.keyFile = "testdata/client.key"
+	g.opts.insecureSkipVerifyTLS = true
+	g.opts.transport = transport
+	usedTransport := verifyInsecureSkipVerify(t, &g, "HTTPGetter with 2 way ssl", false)
+	if usedTransport.TLSClientConfig != nil {
+		t.Fatal("transport.TLSClientConfig should not be set")
+	}
 }

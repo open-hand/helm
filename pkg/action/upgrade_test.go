@@ -17,8 +17,10 @@ limitations under the License.
 package action
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/open-hand/helm/pkg/chart"
 
@@ -27,15 +29,42 @@ import (
 
 	kubefake "github.com/open-hand/helm/pkg/kube/fake"
 	"github.com/open-hand/helm/pkg/release"
-	"github.com/open-hand/helm/pkg/time"
+	helmtime "github.com/open-hand/helm/pkg/time"
 )
 
 func upgradeAction(t *testing.T) *Upgrade {
 	config := actionConfigFixture(t)
-	upAction := NewUpgrade(config, ChartPathOptions{}, "", 0, nil, "", "", "", 0, "", false)
+	upAction := NewUpgrade(config)
 	upAction.Namespace = "spaced"
 
 	return upAction
+}
+
+func TestUpgradeRelease_Success(t *testing.T) {
+	is := assert.New(t)
+	req := require.New(t)
+
+	upAction := upgradeAction(t)
+	rel := releaseStub()
+	rel.Name = "previous-release"
+	rel.Info.Status = release.StatusDeployed
+	req.NoError(upAction.cfg.Releases.Create(rel))
+
+	upAction.Wait = true
+	vals := map[string]interface{}{}
+
+	ctx, done := context.WithCancel(context.Background())
+	res, err := upAction.RunWithContext(ctx, rel.Name, buildChart(), vals)
+	done()
+	req.NoError(err)
+	is.Equal(res.Info.Status, release.StatusDeployed)
+
+	// Detecting previous bug where context termination after successful release
+	// caused release to fail.
+	time.Sleep(time.Millisecond * 100)
+	lastRelease, err := upAction.cfg.Releases.Last(rel.Name)
+	req.NoError(err)
+	is.Equal(lastRelease.Info.Status, release.StatusDeployed)
 }
 
 func TestUpgradeRelease_Wait(t *testing.T) {
@@ -54,7 +83,30 @@ func TestUpgradeRelease_Wait(t *testing.T) {
 	upAction.Wait = true
 	vals := map[string]interface{}{}
 
-	res, err := upAction.Run(rel.Name, buildChart(), vals, "")
+	res, err := upAction.Run(rel.Name, buildChart(), vals)
+	req.Error(err)
+	is.Contains(res.Info.Description, "I timed out")
+	is.Equal(res.Info.Status, release.StatusFailed)
+}
+
+func TestUpgradeRelease_WaitForJobs(t *testing.T) {
+	is := assert.New(t)
+	req := require.New(t)
+
+	upAction := upgradeAction(t)
+	rel := releaseStub()
+	rel.Name = "come-fail-away"
+	rel.Info.Status = release.StatusDeployed
+	upAction.cfg.Releases.Create(rel)
+
+	failer := upAction.cfg.KubeClient.(*kubefake.FailingKubeClient)
+	failer.WaitError = fmt.Errorf("I timed out")
+	upAction.cfg.KubeClient = failer
+	upAction.Wait = true
+	upAction.WaitForJobs = true
+	vals := map[string]interface{}{}
+
+	res, err := upAction.Run(rel.Name, buildChart(), vals)
 	req.Error(err)
 	is.Contains(res.Info.Description, "I timed out")
 	is.Equal(res.Info.Status, release.StatusFailed)
@@ -78,7 +130,7 @@ func TestUpgradeRelease_CleanupOnFail(t *testing.T) {
 	upAction.CleanupOnFail = true
 	vals := map[string]interface{}{}
 
-	res, err := upAction.Run(rel.Name, buildChart(), vals, "")
+	res, err := upAction.Run(rel.Name, buildChart(), vals)
 	req.Error(err)
 	is.NotContains(err.Error(), "unable to cleanup resources")
 	is.Contains(res.Info.Description, "I timed out")
@@ -104,7 +156,7 @@ func TestUpgradeRelease_Atomic(t *testing.T) {
 		upAction.Atomic = true
 		vals := map[string]interface{}{}
 
-		res, err := upAction.Run(rel.Name, buildChart(), vals, "")
+		res, err := upAction.Run(rel.Name, buildChart(), vals)
 		req.Error(err)
 		is.Contains(err.Error(), "arming key removed")
 		is.Contains(err.Error(), "atomic")
@@ -129,7 +181,7 @@ func TestUpgradeRelease_Atomic(t *testing.T) {
 		upAction.Atomic = true
 		vals := map[string]interface{}{}
 
-		_, err := upAction.Run(rel.Name, buildChart(), vals, "")
+		_, err := upAction.Run(rel.Name, buildChart(), vals)
 		req.Error(err)
 		is.Contains(err.Error(), "update fail")
 		is.Contains(err.Error(), "an error occurred while rolling back the release")
@@ -169,7 +221,7 @@ func TestUpgradeRelease_ReuseValues(t *testing.T) {
 
 		upAction.ReuseValues = true
 		// setting newValues and upgrading
-		res, err := upAction.Run(rel.Name, buildChart(), newValues, "")
+		res, err := upAction.Run(rel.Name, buildChart(), newValues)
 		is.NoError(err)
 
 		// Now make sure it is actually upgraded
@@ -202,7 +254,7 @@ func TestUpgradeRelease_ReuseValues(t *testing.T) {
 			withValues(chartDefaultValues),
 			withMetadataDependency(dependency),
 		)
-		now := time.Now()
+		now := helmtime.Now()
 		existingValues := map[string]interface{}{
 			"subchart": map[string]interface{}{
 				"enabled": false,
@@ -231,7 +283,7 @@ func TestUpgradeRelease_ReuseValues(t *testing.T) {
 			withMetadataDependency(dependency),
 		)
 		// reusing values and upgrading
-		res, err := upAction.Run(rel.Name, sampleChartWithSubChart, map[string]interface{}{}, "")
+		res, err := upAction.Run(rel.Name, sampleChartWithSubChart, map[string]interface{}{})
 		is.NoError(err)
 
 		// Now get the upgraded release
@@ -252,4 +304,87 @@ func TestUpgradeRelease_ReuseValues(t *testing.T) {
 		}
 		is.Equal(expectedValues, updatedRes.Config)
 	})
+}
+
+func TestUpgradeRelease_Pending(t *testing.T) {
+	req := require.New(t)
+
+	upAction := upgradeAction(t)
+	rel := releaseStub()
+	rel.Name = "come-fail-away"
+	rel.Info.Status = release.StatusDeployed
+	upAction.cfg.Releases.Create(rel)
+	rel2 := releaseStub()
+	rel2.Name = "come-fail-away"
+	rel2.Info.Status = release.StatusPendingUpgrade
+	rel2.Version = 2
+	upAction.cfg.Releases.Create(rel2)
+
+	vals := map[string]interface{}{}
+
+	_, err := upAction.Run(rel.Name, buildChart(), vals)
+	req.Contains(err.Error(), "progress", err)
+}
+
+func TestUpgradeRelease_Interrupted_Wait(t *testing.T) {
+
+	is := assert.New(t)
+	req := require.New(t)
+
+	upAction := upgradeAction(t)
+	rel := releaseStub()
+	rel.Name = "interrupted-release"
+	rel.Info.Status = release.StatusDeployed
+	upAction.cfg.Releases.Create(rel)
+
+	failer := upAction.cfg.KubeClient.(*kubefake.FailingKubeClient)
+	failer.WaitDuration = 10 * time.Second
+	upAction.cfg.KubeClient = failer
+	upAction.Wait = true
+	vals := map[string]interface{}{}
+
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	time.AfterFunc(time.Second, cancel)
+
+	res, err := upAction.RunWithContext(ctx, rel.Name, buildChart(), vals)
+
+	req.Error(err)
+	is.Contains(res.Info.Description, "Upgrade \"interrupted-release\" failed: context canceled")
+	is.Equal(res.Info.Status, release.StatusFailed)
+
+}
+
+func TestUpgradeRelease_Interrupted_Atomic(t *testing.T) {
+
+	is := assert.New(t)
+	req := require.New(t)
+
+	upAction := upgradeAction(t)
+	rel := releaseStub()
+	rel.Name = "interrupted-release"
+	rel.Info.Status = release.StatusDeployed
+	upAction.cfg.Releases.Create(rel)
+
+	failer := upAction.cfg.KubeClient.(*kubefake.FailingKubeClient)
+	failer.WaitDuration = 5 * time.Second
+	upAction.cfg.KubeClient = failer
+	upAction.Atomic = true
+	vals := map[string]interface{}{}
+
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	time.AfterFunc(time.Second, cancel)
+
+	res, err := upAction.RunWithContext(ctx, rel.Name, buildChart(), vals)
+
+	req.Error(err)
+	is.Contains(err.Error(), "release interrupted-release failed, and has been rolled back due to atomic being set: context canceled")
+
+	// Now make sure it is actually upgraded
+	updatedRes, err := upAction.cfg.Releases.Get(res.Name, 3)
+	is.NoError(err)
+	// Should have rolled back to the previous
+	is.Equal(updatedRes.Info.Status, release.StatusDeployed)
+
 }

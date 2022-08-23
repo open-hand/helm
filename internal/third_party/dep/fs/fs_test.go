@@ -35,7 +35,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -47,13 +46,9 @@ var (
 )
 
 func TestRenameWithFallback(t *testing.T) {
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
-	if err = RenameWithFallback(filepath.Join(dir, "does_not_exists"), filepath.Join(dir, "dst")); err == nil {
+	if err := RenameWithFallback(filepath.Join(dir, "does_not_exists"), filepath.Join(dir, "dst")); err == nil {
 		t.Fatal("expected an error for non existing file, but got nil")
 	}
 
@@ -65,31 +60,27 @@ func TestRenameWithFallback(t *testing.T) {
 		srcf.Close()
 	}
 
-	if err = RenameWithFallback(srcpath, filepath.Join(dir, "dst")); err != nil {
+	if err := RenameWithFallback(srcpath, filepath.Join(dir, "dst")); err != nil {
 		t.Fatal(err)
 	}
 
 	srcpath = filepath.Join(dir, "a")
-	if err = os.MkdirAll(srcpath, 0777); err != nil {
+	if err := os.MkdirAll(srcpath, 0777); err != nil {
 		t.Fatal(err)
 	}
 
 	dstpath := filepath.Join(dir, "b")
-	if err = os.MkdirAll(dstpath, 0777); err != nil {
+	if err := os.MkdirAll(dstpath, 0777); err != nil {
 		t.Fatal(err)
 	}
 
-	if err = RenameWithFallback(srcpath, dstpath); err == nil {
+	if err := RenameWithFallback(srcpath, dstpath); err == nil {
 		t.Fatal("expected an error if dst is an existing directory, but got nil")
 	}
 }
 
 func TestCopyDir(t *testing.T) {
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcdir := filepath.Join(dir, "src")
 	if err := os.MkdirAll(srcdir, 0755); err != nil {
@@ -109,7 +100,7 @@ func TestCopyDir(t *testing.T) {
 	for i, file := range files {
 		fn := filepath.Join(srcdir, file.path)
 		dn := filepath.Dir(fn)
-		if err = os.MkdirAll(dn, 0755); err != nil {
+		if err := os.MkdirAll(dn, 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -175,13 +166,9 @@ func TestCopyDirFail_SrcInaccessible(t *testing.T) {
 		t.Skip("skipping on windows")
 	}
 
-	var currentUser, err = user.Current()
+	var currentUID = os.Getuid()
 
-	if err != nil {
-		t.Fatalf("Failed to get name of current user: %s", err)
-	}
-
-	if currentUser.Name == "root" {
+	if currentUID == 0 {
 		// Skipping if root, because all files are accessible
 		t.Skip("Skipping for root user")
 	}
@@ -194,14 +181,10 @@ func TestCopyDirFail_SrcInaccessible(t *testing.T) {
 	})
 	defer cleanup()
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	dstdir = filepath.Join(dir, "dst")
-	if err = CopyDir(srcdir, dstdir); err == nil {
+	if err := CopyDir(srcdir, dstdir); err == nil {
 		t.Fatalf("expected error for CopyDir(%s, %s), got none", srcdir, dstdir)
 	}
 }
@@ -214,27 +197,19 @@ func TestCopyDirFail_DstInaccessible(t *testing.T) {
 		t.Skip("skipping on windows")
 	}
 
-	var currentUser, err = user.Current()
+	var currentUID = os.Getuid()
 
-	if err != nil {
-		t.Fatalf("Failed to get name of current user: %s", err)
-	}
-
-	if currentUser.Name == "root" {
+	if currentUID == 0 {
 		// Skipping if root, because all files are accessible
 		t.Skip("Skipping for root user")
 	}
 
 	var srcdir, dstdir string
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcdir = filepath.Join(dir, "src")
-	if err = os.MkdirAll(srcdir, 0755); err != nil {
+	if err := os.MkdirAll(srcdir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -251,12 +226,9 @@ func TestCopyDirFail_DstInaccessible(t *testing.T) {
 
 func TestCopyDirFail_SrcIsNotDir(t *testing.T) {
 	var srcdir, dstdir string
+	var err error
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcdir = filepath.Join(dir, "src")
 	if _, err = os.Create(srcdir); err != nil {
@@ -277,12 +249,9 @@ func TestCopyDirFail_SrcIsNotDir(t *testing.T) {
 
 func TestCopyDirFail_DstExists(t *testing.T) {
 	var srcdir, dstdir string
+	var err error
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcdir = filepath.Join(dir, "src")
 	if err = os.MkdirAll(srcdir, 0755); err != nil {
@@ -314,27 +283,19 @@ func TestCopyDirFailOpen(t *testing.T) {
 		t.Skip("skipping on windows")
 	}
 
-	var currentUser, err = user.Current()
+	var currentUID = os.Getuid()
 
-	if err != nil {
-		t.Fatalf("Failed to get name of current user: %s", err)
-	}
-
-	if currentUser.Name == "root" {
+	if currentUID == 0 {
 		// Skipping if root, because all files are accessible
 		t.Skip("Skipping for root user")
 	}
 
 	var srcdir, dstdir string
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcdir = filepath.Join(dir, "src")
-	if err = os.MkdirAll(srcdir, 0755); err != nil {
+	if err := os.MkdirAll(srcdir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -358,11 +319,7 @@ func TestCopyDirFailOpen(t *testing.T) {
 }
 
 func TestCopyFile(t *testing.T) {
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcf, err := os.Create(filepath.Join(dir, "srcfile"))
 	if err != nil {
@@ -418,13 +375,7 @@ func cleanUpDir(dir string) {
 }
 
 func TestCopyFileSymlink(t *testing.T) {
-	var tempdir, err = ioutil.TempDir("", "gotest")
-
-	if err != nil {
-		t.Fatalf("failed to create directory: %s", err)
-	}
-
-	defer cleanUpDir(tempdir)
+	tempdir := t.TempDir()
 
 	testcases := map[string]string{
 		filepath.Join("./testdata/symlinks/file-symlink"):         filepath.Join(tempdir, "dst-file"),
@@ -483,22 +434,14 @@ func TestCopyFileFail(t *testing.T) {
 		t.Skip("skipping on windows")
 	}
 
-	var currentUser, err = user.Current()
+	var currentUID = os.Getuid()
 
-	if err != nil {
-		t.Fatalf("Failed to get name of current user: %s", err)
-	}
-
-	if currentUser.Name == "root" {
+	if currentUID == 0 {
 		// Skipping if root, because all files are accessible
 		t.Skip("Skipping for root user")
 	}
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	srcf, err := os.Create(filepath.Join(dir, "srcfile"))
 	if err != nil {
@@ -534,19 +477,12 @@ func TestCopyFileFail(t *testing.T) {
 // files this function creates. It is the caller's responsibility to call
 // this function before the test is done running, whether there's an error or not.
 func setupInaccessibleDir(t *testing.T, op func(dir string) error) func() {
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-		return nil // keep compiler happy
-	}
+	dir := t.TempDir()
 
 	subdir := filepath.Join(dir, "dir")
 
 	cleanup := func() {
 		if err := os.Chmod(subdir, 0777); err != nil {
-			t.Error(err)
-		}
-		if err := os.RemoveAll(dir); err != nil {
 			t.Error(err)
 		}
 	}
@@ -574,13 +510,9 @@ func setupInaccessibleDir(t *testing.T, op func(dir string) error) func() {
 
 func TestIsDir(t *testing.T) {
 
-	var currentUser, err = user.Current()
+	var currentUID = os.Getuid()
 
-	if err != nil {
-		t.Fatalf("Failed to get name of current user: %s", err)
-	}
-
-	if currentUser.Name == "root" {
+	if currentUID == 0 {
 		// Skipping if root, because all files are accessible
 		t.Skip("Skipping for root user")
 	}
@@ -631,25 +563,17 @@ func TestIsDir(t *testing.T) {
 
 func TestIsSymlink(t *testing.T) {
 
-	var currentUser, err = user.Current()
+	var currentUID = os.Getuid()
 
-	if err != nil {
-		t.Fatalf("Failed to get name of current user: %s", err)
-	}
-
-	if currentUser.Name == "root" {
+	if currentUID == 0 {
 		// Skipping if root, because all files are accessible
 		t.Skip("Skipping for root user")
 	}
 
-	dir, err := ioutil.TempDir("", "helm-tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	dirPath := filepath.Join(dir, "directory")
-	if err = os.MkdirAll(dirPath, 0777); err != nil {
+	if err := os.MkdirAll(dirPath, 0777); err != nil {
 		t.Fatal(err)
 	}
 

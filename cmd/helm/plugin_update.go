@@ -24,7 +24,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/open-hand/helm/internal/completion"
 	"github.com/open-hand/helm/pkg/plugin"
 	"github.com/open-hand/helm/pkg/plugin/installer"
 )
@@ -40,6 +39,9 @@ func newPluginUpdateCmd(out io.Writer) *cobra.Command {
 		Use:     "update <plugin>...",
 		Aliases: []string{"up"},
 		Short:   "update one or more Helm plugins",
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			return compListPlugins(toComplete, args), cobra.ShellCompDirectiveNoFileComp
+		},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return o.complete(args)
 		},
@@ -47,15 +49,6 @@ func newPluginUpdateCmd(out io.Writer) *cobra.Command {
 			return o.run(out)
 		},
 	}
-
-	// Function providing dynamic auto-completion
-	completion.RegisterValidArgsFunc(cmd, func(cmd *cobra.Command, args []string, toComplete string) ([]string, completion.BashCompDirective) {
-		if len(args) != 0 {
-			return nil, completion.BashCompDirectiveNoFileComp
-		}
-		return compListPlugins(toComplete), completion.BashCompDirectiveNoFileComp
-	})
-
 	return cmd
 }
 
@@ -70,7 +63,7 @@ func (o *pluginUpdateOptions) complete(args []string) error {
 func (o *pluginUpdateOptions) run(out io.Writer) error {
 	installer.Debug = settings.Debug
 	debug("loading installed plugins from %s", settings.PluginsDirectory)
-	plugins, err := findPlugins(settings.PluginsDirectory)
+	plugins, err := plugin.FindPlugins(settings.PluginsDirectory)
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/open-hand/helm/cmd/helm/search"
-	"github.com/open-hand/helm/internal/completion"
 	"github.com/open-hand/helm/pkg/cli/output"
 	"github.com/open-hand/helm/pkg/helmpath"
 	"github.com/open-hand/helm/pkg/repo"
@@ -145,7 +144,7 @@ func (o *searchRepoOptions) setupSearchedVersion() {
 }
 
 func (o *searchRepoOptions) applyConstraint(res []*search.Result) ([]*search.Result, error) {
-	if len(o.version) == 0 {
+	if o.version == "" {
 		return res, nil
 	}
 
@@ -157,15 +156,18 @@ func (o *searchRepoOptions) applyConstraint(res []*search.Result) ([]*search.Res
 	data := res[:0]
 	foundNames := map[string]bool{}
 	for _, r := range res {
-		if _, found := foundNames[r.Name]; found {
+		// if not returning all versions and already have found a result,
+		// you're done!
+		if !o.versions && foundNames[r.Name] {
 			continue
 		}
 		v, err := semver.NewVersion(r.Chart.Version)
-		if err != nil || constraint.Check(v) {
+		if err != nil {
+			continue
+		}
+		if constraint.Check(v) {
 			data = append(data, r)
-			if !o.versions {
-				foundNames[r.Name] = true // If user hasn't requested all versions, only show the latest that matches
-			}
+			foundNames[r.Name] = true
 		}
 	}
 
@@ -185,7 +187,8 @@ func (o *searchRepoOptions) buildIndex() (*search.Index, error) {
 		f := filepath.Join(o.repoCacheDir, helmpath.CacheIndexFile(n))
 		ind, err := repo.LoadIndexFile(f)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "WARNING: Repo %q is corrupt or missing. Try 'helm repo update'.", n)
+			warning("Repo %q is corrupt or missing. Try 'helm repo update'.", n)
+			warning("%s", err)
 			continue
 		}
 
@@ -290,32 +293,40 @@ func compListChartsOfRepo(repoName string, prefix string) []string {
 
 // Provide dynamic auto-completion for commands that operate on charts (e.g., helm show)
 // When true, the includeFiles argument indicates that completion should include local files (e.g., local charts)
-func compListCharts(toComplete string, includeFiles bool) ([]string, completion.BashCompDirective) {
-	completion.CompDebugln(fmt.Sprintf("compListCharts with toComplete %s", toComplete))
+func compListCharts(toComplete string, includeFiles bool) ([]string, cobra.ShellCompDirective) {
+	cobra.CompDebugln(fmt.Sprintf("compListCharts with toComplete %s", toComplete), settings.Debug)
 
 	noSpace := false
 	noFile := false
 	var completions []string
 
 	// First check completions for repos
-	repos := compListRepos("")
-	for _, repo := range repos {
+	repos := compListRepos("", nil)
+	for _, repoInfo := range repos {
+		// Split name from description
+		repoInfo := strings.Split(repoInfo, "\t")
+		repo := repoInfo[0]
+		repoDesc := ""
+		if len(repoInfo) > 1 {
+			repoDesc = repoInfo[1]
+		}
 		repoWithSlash := fmt.Sprintf("%s/", repo)
 		if strings.HasPrefix(toComplete, repoWithSlash) {
-			// Must complete with charts within the specified repo
-			completions = append(completions, compListChartsOfRepo(repo, toComplete)...)
+			// Must complete with charts within the specified repo.
+			// Don't filter on toComplete to allow for shell fuzzy matching
+			completions = append(completions, compListChartsOfRepo(repo, "")...)
 			noSpace = false
 			break
 		} else if strings.HasPrefix(repo, toComplete) {
-			// Must complete the repo name
-			completions = append(completions, repoWithSlash)
+			// Must complete the repo name with the slash, followed by the description
+			completions = append(completions, fmt.Sprintf("%s\t%s", repoWithSlash, repoDesc))
 			noSpace = true
 		}
 	}
-	completion.CompDebugln(fmt.Sprintf("Completions after repos: %v", completions))
+	cobra.CompDebugln(fmt.Sprintf("Completions after repos: %v", completions), settings.Debug)
 
 	// Now handle completions for url prefixes
-	for _, url := range []string{"https://", "http://", "file://"} {
+	for _, url := range []string{"oci://\tChart OCI prefix", "https://\tChart URL prefix", "http://\tChart URL prefix", "file://\tChart local URL prefix"} {
 		if strings.HasPrefix(toComplete, url) {
 			// The user already put in the full url prefix; we don't have
 			// anything to add, but make sure the shell does not default
@@ -328,7 +339,7 @@ func compListCharts(toComplete string, includeFiles bool) ([]string, completion.
 			noSpace = true
 		}
 	}
-	completion.CompDebugln(fmt.Sprintf("Completions after urls: %v", completions))
+	cobra.CompDebugln(fmt.Sprintf("Completions after urls: %v", completions), settings.Debug)
 
 	// Finally, provide file completion if we need to.
 	// We only do this if:
@@ -338,7 +349,7 @@ func compListCharts(toComplete string, includeFiles bool) ([]string, completion.
 	//    listing the entire content of the current directory which will
 	//    be too many choices for the user to find the real repos)
 	if includeFiles && len(completions) > 0 && len(toComplete) > 0 {
-		if files, err := ioutil.ReadDir("."); err == nil {
+		if files, err := os.ReadDir("."); err == nil {
 			for _, file := range files {
 				if strings.HasPrefix(file.Name(), toComplete) {
 					// We are completing a file prefix
@@ -347,40 +358,26 @@ func compListCharts(toComplete string, includeFiles bool) ([]string, completion.
 			}
 		}
 	}
-	completion.CompDebugln(fmt.Sprintf("Completions after files: %v", completions))
+	cobra.CompDebugln(fmt.Sprintf("Completions after files: %v", completions), settings.Debug)
 
 	// If the user didn't provide any input to completion,
 	// we provide a hint that a path can also be used
 	if includeFiles && len(toComplete) == 0 {
-		completions = append(completions, "./", "/")
+		completions = append(completions, "./\tRelative path prefix to local chart", "/\tAbsolute path prefix to local chart")
 	}
-	completion.CompDebugln(fmt.Sprintf("Completions after checking empty input: %v", completions))
+	cobra.CompDebugln(fmt.Sprintf("Completions after checking empty input: %v", completions), settings.Debug)
 
-	directive := completion.BashCompDirectiveDefault
+	directive := cobra.ShellCompDirectiveDefault
 	if noFile {
-		directive = directive | completion.BashCompDirectiveNoFileComp
+		directive = directive | cobra.ShellCompDirectiveNoFileComp
 	}
 	if noSpace {
-		directive = directive | completion.BashCompDirectiveNoSpace
-		// The completion.BashCompDirective flags do not work for zsh right now.
-		// We handle it ourselves instead.
-		completions = compEnforceNoSpace(completions)
+		directive = directive | cobra.ShellCompDirectiveNoSpace
+	}
+	if !includeFiles {
+		// If we should not include files in the completions,
+		// we should disable file completion
+		directive = directive | cobra.ShellCompDirectiveNoFileComp
 	}
 	return completions, directive
-}
-
-// This function prevents the shell from adding a space after
-// a completion by adding a second, fake completion.
-// It is only needed for zsh, but we cannot tell which shell
-// is being used here, so we do the fake completion all the time;
-// there are no real downsides to doing this for bash as well.
-func compEnforceNoSpace(completions []string) []string {
-	// To prevent the shell from adding space after the completion,
-	// we trick it by pretending there is a second, longer match.
-	// We only do this if there is a single choice for completion.
-	if len(completions) == 1 {
-		completions = append(completions, completions[0]+".")
-		completion.CompDebugln(fmt.Sprintf("compEnforceNoSpace: completions now are %v", completions))
-	}
-	return completions
 }

@@ -17,19 +17,24 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/open-hand/helm/cmd/helm/require"
-	"github.com/open-hand/helm/internal/completion"
 	"github.com/open-hand/helm/pkg/action"
 	"github.com/open-hand/helm/pkg/chart/loader"
 	"github.com/open-hand/helm/pkg/cli/output"
 	"github.com/open-hand/helm/pkg/cli/values"
+	"github.com/open-hand/helm/pkg/downloader"
 	"github.com/open-hand/helm/pkg/getter"
 	"github.com/open-hand/helm/pkg/storage/driver"
 )
@@ -44,9 +49,9 @@ version will be specified unless the '--version' flag is set.
 
 To override values in a chart, use either the '--values' flag and pass in a file
 or use the '--set' flag and pass configuration from the command line, to force string
-values, use '--set-string'. In case a value is large and therefore
-you want not to use neither '--values' nor '--set', use '--set-file' to read the
-single large value from file.
+values, use '--set-string'. You can use '--set-file' to set individual
+values from a file when the value itself is too long for the command line
+or is dynamically generated.
 
 You can specify the '--values'/'-f' flag multiple times. The priority will be given to the
 last (right-most) file specified. For example, if both myvalues.yaml and override.yaml
@@ -62,7 +67,7 @@ set for a key called 'foo', the 'newbar' value would take precedence:
 `
 
 func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
-	client := action.NewUpgrade(cfg, action.ChartPathOptions{}, "", 0, "",nil, "", "", "", 0, "", "",false)
+	client := action.NewUpgrade(cfg, action.ChartPathOptions{}, "", 0, "", nil, "", "", "", 0, "", "", false)
 	valueOpts := &values.Options{}
 	var outfmt output.Format
 	var createNamespace bool
@@ -72,24 +77,20 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 		Short: "upgrade a release",
 		Long:  upgradeDesc,
 		Args:  require.ExactArgs(2),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) == 0 {
+				return compListReleases(toComplete, args, cfg)
+			}
+			if len(args) == 1 {
+				return compListCharts(toComplete, true)
+			}
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client.Namespace = settings.Namespace()
 
-			if client.Version == "" && client.Devel {
-				debug("setting version to >0.0.0-0")
-				client.Version = ">0.0.0-0"
-			}
-
-			vals, err := valueOpts.MergeValues(getter.All(settings))
-			if err != nil {
-				return err
-			}
-
-			chartPath, err := client.ChartPathOptions.LocateChart(args[1], settings)
-			if err != nil {
-				return err
-			}
-
+			// Fixes #7002 - Support reading values from STDIN for `upgrade` command
+			// Must load values AFTER determining if we have to call install so that values loaded from stdin are are not read twice
 			if client.Install {
 				// If a release does not exist, install it.
 				histClient := action.NewHistory(cfg)
@@ -99,7 +100,7 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 					if outfmt == output.Table {
 						fmt.Fprintf(out, "Release %q does not exist. Installing it now.\n", args[0])
 					}
-					instClient := action.NewInstall(cfg, action.ChartPathOptions{}, "", 0, "",nil, "", "", "", "", 0, "", "", "",false)
+					instClient := action.NewInstall(cfg, action.ChartPathOptions{}, "", 0, "", nil, "", "", "", "", 0, "", "", "", false)
 					instClient.CreateNamespace = createNamespace
 					instClient.ChartPathOptions = client.ChartPathOptions
 					instClient.DryRun = client.DryRun
@@ -107,20 +108,40 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 					instClient.SkipCRDs = client.SkipCRDs
 					instClient.Timeout = client.Timeout
 					instClient.Wait = client.Wait
+					instClient.WaitForJobs = client.WaitForJobs
 					instClient.Devel = client.Devel
 					instClient.Namespace = client.Namespace
 					instClient.Atomic = client.Atomic
 					instClient.PostRenderer = client.PostRenderer
 					instClient.DisableOpenAPIValidation = client.DisableOpenAPIValidation
+					instClient.SubNotes = client.SubNotes
+					instClient.Description = client.Description
+					instClient.DependencyUpdate = client.DependencyUpdate
 
 					rel, err := runInstall(args, instClient, valueOpts, out)
 					if err != nil {
 						return err
 					}
-					return outfmt.Write(out, &statusPrinter{rel, settings.Debug})
+					return outfmt.Write(out, &statusPrinter{rel, settings.Debug, false})
 				} else if err != nil {
 					return err
 				}
+			}
+
+			if client.Version == "" && client.Devel {
+				debug("setting version to >0.0.0-0")
+				client.Version = ">0.0.0-0"
+			}
+
+			chartPath, err := client.ChartPathOptions.LocateChart(args[1], settings)
+			if err != nil {
+				return err
+			}
+
+			p := getter.All(settings)
+			vals, err := valueOpts.MergeValues(p)
+			if err != nil {
+				return err
 			}
 
 			// Check chart dependencies to make sure all are present in /charts
@@ -130,15 +151,51 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 			}
 			if req := ch.Metadata.Dependencies; req != nil {
 				if err := action.CheckDependencies(ch, req); err != nil {
-					return err
+					err = errors.Wrap(err, "An error occurred while checking for chart dependencies. You may need to run `helm dependency build` to fetch missing dependencies")
+					if client.DependencyUpdate {
+						man := &downloader.Manager{
+							Out:              out,
+							ChartPath:        chartPath,
+							Keyring:          client.ChartPathOptions.Keyring,
+							SkipUpdate:       false,
+							Getters:          p,
+							RepositoryConfig: settings.RepositoryConfig,
+							RepositoryCache:  settings.RepositoryCache,
+							Debug:            settings.Debug,
+						}
+						if err := man.Update(); err != nil {
+							return err
+						}
+						// Reload the chart with the updated Chart.lock file.
+						if ch, err = loader.Load(chartPath); err != nil {
+							return errors.Wrap(err, "failed reloading chart after repo update")
+						}
+					} else {
+						return err
+					}
 				}
 			}
 
 			if ch.Metadata.Deprecated {
-				fmt.Fprintln(out, "WARNING: This chart is deprecated")
+				warning("This chart is deprecated")
 			}
 
-			rel, err := client.Run(args[0], ch, vals, "")
+			// Create context and prepare the handle of SIGTERM
+			ctx := context.Background()
+			ctx, cancel := context.WithCancel(ctx)
+
+			// Set up channel on which to send signal notifications.
+			// We must use a buffered channel or risk missing the signal
+			// if we're not ready to receive when the signal is sent.
+			cSignal := make(chan os.Signal, 2)
+			signal.Notify(cSignal, os.Interrupt, syscall.SIGTERM)
+			go func() {
+				<-cSignal
+				fmt.Fprintf(out, "Release %s has been cancelled.\n", args[0])
+				cancel()
+			}()
+
+			rel, err := client.RunWithContext(ctx, args[0], ch, vals, "")
 			if err != nil {
 				return errors.Wrap(err, "UPGRADE FAILED")
 			}
@@ -147,20 +204,9 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 				fmt.Fprintf(out, "Release %q has been upgraded. Happy Helming!\n", args[0])
 			}
 
-			return outfmt.Write(out, &statusPrinter{rel, settings.Debug})
+			return outfmt.Write(out, &statusPrinter{rel, settings.Debug, false})
 		},
 	}
-
-	// Function providing dynamic auto-completion
-	completion.RegisterValidArgsFunc(cmd, func(cmd *cobra.Command, args []string, toComplete string) ([]string, completion.BashCompDirective) {
-		if len(args) == 0 {
-			return compListReleases(toComplete, cfg)
-		}
-		if len(args) == 1 {
-			return compListCharts(toComplete, true)
-		}
-		return nil, completion.BashCompDirectiveNoFileComp
-	})
 
 	f := cmd.Flags()
 	f.BoolVar(&createNamespace, "create-namespace", false, "if --install is set, create the release namespace if not present")
@@ -177,15 +223,28 @@ func newUpgradeCmd(cfg *action.Configuration, out io.Writer) *cobra.Command {
 	f.BoolVar(&client.ResetValues, "reset-values", false, "when upgrading, reset the values to the ones built into the chart")
 	f.BoolVar(&client.ReuseValues, "reuse-values", false, "when upgrading, reuse the last release's values and merge in any overrides from the command line via --set and -f. If '--reset-values' is specified, this is ignored")
 	f.BoolVar(&client.Wait, "wait", false, "if set, will wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment, StatefulSet, or ReplicaSet are in a ready state before marking the release as successful. It will wait for as long as --timeout")
+	f.BoolVar(&client.WaitForJobs, "wait-for-jobs", false, "if set and --wait enabled, will wait until all Jobs have been completed before marking the release as successful. It will wait for as long as --timeout")
 	f.BoolVar(&client.Atomic, "atomic", false, "if set, upgrade process rolls back changes made in case of failed upgrade. The --wait flag will be set automatically if --atomic is used")
-	f.IntVar(&client.MaxHistory, "history-max", 10, "limit the maximum number of revisions saved per release. Use 0 for no limit")
+	f.IntVar(&client.MaxHistory, "history-max", settings.MaxHistory, "limit the maximum number of revisions saved per release. Use 0 for no limit")
 	f.BoolVar(&client.CleanupOnFail, "cleanup-on-fail", false, "allow deletion of new resources created in this upgrade when upgrade fails")
 	f.BoolVar(&client.SubNotes, "render-subchart-notes", false, "if set, render subchart notes along with the parent")
 	f.StringVar(&client.Description, "description", "", "add a custom description")
+	f.BoolVar(&client.DependencyUpdate, "dependency-update", false, "update dependencies if they are missing before installing the chart")
 	addChartPathOptionsFlags(f, &client.ChartPathOptions)
 	addValueOptionsFlags(f, valueOpts)
 	bindOutputFlag(cmd, &outfmt)
 	bindPostRenderFlag(cmd, &client.PostRenderer)
+
+	err := cmd.RegisterFlagCompletionFunc("version", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) != 2 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		return compVersionFlag(args[1], toComplete)
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return cmd
 }

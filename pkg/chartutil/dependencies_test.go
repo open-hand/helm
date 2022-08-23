@@ -190,13 +190,13 @@ func TestProcessDependencyImportValues(t *testing.T) {
 	e["overridden-chartA.SCAbool"] = "true"
 	e["overridden-chartA.SCAfloat"] = "41.3"
 	e["overridden-chartA.SCAint"] = "808"
-	e["overridden-chartA.SCAstring"] = "jaberwocky"
+	e["overridden-chartA.SCAstring"] = "jabberwocky"
 	e["overridden-chartA.SPextra4"] = "true"
 
 	e["overridden-chartA-B.SCAbool"] = "true"
 	e["overridden-chartA-B.SCAfloat"] = "41.3"
 	e["overridden-chartA-B.SCAint"] = "808"
-	e["overridden-chartA-B.SCAstring"] = "jaberwocky"
+	e["overridden-chartA-B.SCAstring"] = "jabberwocky"
 	e["overridden-chartA-B.SCBbool"] = "false"
 	e["overridden-chartA-B.SCBfloat"] = "1.99"
 	e["overridden-chartA-B.SCBint"] = "77"
@@ -230,6 +230,37 @@ func TestProcessDependencyImportValues(t *testing.T) {
 		case bool:
 			if b := strconv.FormatBool(pv); b != vv {
 				t.Errorf("failed to match imported bool value %v with expected %v", b, vv)
+			}
+		default:
+			if pv != vv {
+				t.Errorf("failed to match imported string value %q with expected %q", pv, vv)
+			}
+		}
+	}
+}
+
+func TestProcessDependencyImportValuesMultiLevelPrecedence(t *testing.T) {
+	c := loadChart(t, "testdata/three-level-dependent-chart/umbrella")
+
+	e := make(map[string]string)
+
+	e["app1.service.port"] = "3456"
+	e["app2.service.port"] = "8080"
+
+	if err := processDependencyImportValues(c); err != nil {
+		t.Fatalf("processing import values dependencies %v", err)
+	}
+	cc := Values(c.Values)
+	for kk, vv := range e {
+		pv, err := cc.PathValue(kk)
+		if err != nil {
+			t.Fatalf("retrieving import values table %v %v", kk, err)
+		}
+
+		switch pv := pv.(type) {
+		case float64:
+			if s := strconv.FormatFloat(pv, 'f', -1, 64); s != vv {
+				t.Errorf("failed to match imported float value %v with expected %v", s, vv)
 			}
 		default:
 			if pv != vv {
@@ -310,6 +341,7 @@ func TestGetAliasDependency(t *testing.T) {
 
 func TestDependentChartAliases(t *testing.T) {
 	c := loadChart(t, "testdata/dependent-chart-alias")
+	req := c.Metadata.Dependencies
 
 	if len(c.Dependencies()) != 2 {
 		t.Fatalf("expected 2 dependencies for this chart, but got %d", len(c.Dependencies()))
@@ -326,7 +358,25 @@ func TestDependentChartAliases(t *testing.T) {
 	if len(c.Dependencies()) != len(c.Metadata.Dependencies) {
 		t.Fatalf("expected number of chart dependencies %d, but got %d", len(c.Metadata.Dependencies), len(c.Dependencies()))
 	}
-	// FIXME test for correct aliases
+
+	aliasChart := getAliasDependency(c.Dependencies(), req[2])
+
+	if aliasChart == nil {
+		t.Fatalf("failed to get dependency chart for alias %s", req[2].Name)
+	}
+	if req[2].Alias != "" {
+		if aliasChart.Name() != req[2].Alias {
+			t.Fatalf("dependency chart name should be %s but got %s", req[2].Alias, aliasChart.Name())
+		}
+	} else if aliasChart.Name() != req[2].Name {
+		t.Fatalf("dependency chart name should be %s but got %s", req[2].Name, aliasChart.Name())
+	}
+
+	req[2].Name = "dummy-name"
+	if aliasChart := getAliasDependency(c.Dependencies(), req[2]); aliasChart != nil {
+		t.Fatalf("expected no chart but got %s", aliasChart.Name())
+	}
+
 }
 
 func TestDependentChartWithSubChartsAbsentInDependency(t *testing.T) {

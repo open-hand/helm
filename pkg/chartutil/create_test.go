@@ -28,11 +28,7 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	tdir, err := ioutil.TempDir("", "helm-")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tdir)
+	tdir := t.TempDir()
 
 	c, err := Create("foo", tdir)
 	if err != nil {
@@ -70,18 +66,14 @@ func TestCreate(t *testing.T) {
 }
 
 func TestCreateFrom(t *testing.T) {
-	tdir, err := ioutil.TempDir("", "helm-")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tdir)
+	tdir := t.TempDir()
 
 	cf := &chart.Metadata{
 		APIVersion: chart.APIVersionV1,
 		Name:       "foo",
 		Version:    "0.1.0",
 	}
-	srcdir := "./testdata/mariner"
+	srcdir := "./testdata/frobnitz/charts/mariner"
 
 	if err := CreateFrom(cf, tdir, srcdir); err != nil {
 		t.Fatal(err)
@@ -114,6 +106,68 @@ func TestCreateFrom(t *testing.T) {
 		}
 		if bytes.Contains(b, []byte("<CHARTNAME>")) {
 			t.Errorf("File %s contains <CHARTNAME>", f)
+		}
+	}
+}
+
+// TestCreate_Overwrite is a regression test for making sure that files are overwritten.
+func TestCreate_Overwrite(t *testing.T) {
+	tdir := t.TempDir()
+
+	var errlog bytes.Buffer
+
+	if _, err := Create("foo", tdir); err != nil {
+		t.Fatal(err)
+	}
+
+	dir := filepath.Join(tdir, "foo")
+
+	tplname := filepath.Join(dir, "templates/hpa.yaml")
+	writeFile(tplname, []byte("FOO"))
+
+	// Now re-run the create
+	Stderr = &errlog
+	if _, err := Create("foo", tdir); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := ioutil.ReadFile(tplname)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(data) == "FOO" {
+		t.Fatal("File that should have been modified was not.")
+	}
+
+	if errlog.Len() == 0 {
+		t.Errorf("Expected warnings about overwriting files.")
+	}
+}
+
+func TestValidateChartName(t *testing.T) {
+	for name, shouldPass := range map[string]bool{
+		"":                              false,
+		"abcdefghijklmnopqrstuvwxyz-_.": true,
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ-_.": true,
+		"$hello":                        false,
+		"Hellô":                         false,
+		"he%%o":                         false,
+		"he\nllo":                       false,
+
+		"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"abcdefghijklmnopqrstuvwxyz-_." +
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ-_.": false,
+	} {
+		if err := validateChartName(name); (err != nil) == shouldPass {
+			t.Errorf("test for %q failed", name)
 		}
 	}
 }

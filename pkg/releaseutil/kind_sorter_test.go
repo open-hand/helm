@@ -20,11 +20,19 @@ import (
 	"bytes"
 	"testing"
 
-	"helm.sh/helm/v3/pkg/release"
+	"github.com/open-hand/helm/pkg/release"
 )
 
 func TestKindSorter(t *testing.T) {
 	manifests := []Manifest{
+		{
+			Name: "U",
+			Head: &SimpleHead{Kind: "IngressClass"},
+		},
+		{
+			Name: "E",
+			Head: &SimpleHead{Kind: "SecretList"},
+		},
 		{
 			Name: "i",
 			Head: &SimpleHead{Kind: "ClusterRole"},
@@ -168,8 +176,8 @@ func TestKindSorter(t *testing.T) {
 		order       KindSortOrder
 		expected    string
 	}{
-		{"install", InstallOrder, "aAbcC3def1gh2iIjJkKlLmnopqrxstuvw!"},
-		{"uninstall", UninstallOrder, "wvmutsxrqponLlKkJjIi2hg1fed3CcbAa!"},
+		{"install", InstallOrder, "aAbcC3deEf1gh2iIjJkKlLmnopqrxstuUvw!"},
+		{"uninstall", UninstallOrder, "wvUmutsxrqponLlKkJjIi2hg1fEed3CcbAa!"},
 	} {
 		var buf bytes.Buffer
 		t.Run(test.description, func(t *testing.T) {

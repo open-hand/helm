@@ -60,8 +60,11 @@ func runTestCmd(t *testing.T, tests []cmdTestCase) {
 				}
 				t.Logf("running cmd (attempt %d): %s", i+1, tt.cmd)
 				_, out, err := executeActionCommandC(storage, tt.cmd)
-				if (err != nil) != tt.wantError {
-					t.Errorf("expected error, got '%v'", err)
+				if tt.wantError && err == nil {
+					t.Errorf("expected error, got success with the following output:\n%s", out)
+				}
+				if !tt.wantError && err != nil {
+					t.Errorf("expected no error, got: '%v'", err)
 				}
 				if tt.golden != "" {
 					test.AssertGoldenString(t, out, tt.golden)
@@ -71,36 +74,20 @@ func runTestCmd(t *testing.T, tests []cmdTestCase) {
 	}
 }
 
-func runTestActionCmd(t *testing.T, tests []cmdTestCase) {
-	t.Helper()
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			defer resetEnv()()
-
-			store := storageFixture()
-			for _, rel := range tt.rels {
-				store.Create(rel)
-			}
-			_, out, err := executeActionCommandC(store, tt.cmd)
-			if (err != nil) != tt.wantError {
-				t.Errorf("expected error, got '%v'", err)
-			}
-			if tt.golden != "" {
-				test.AssertGoldenString(t, out, tt.golden)
-			}
-		})
-	}
-}
-
 func storageFixture() *storage.Storage {
 	return storage.Init(driver.NewMemory())
 }
 
 func executeActionCommandC(store *storage.Storage, cmd string) (*cobra.Command, string, error) {
+	return executeActionCommandStdinC(store, nil, cmd)
+}
+
+func executeActionCommandStdinC(store *storage.Storage, in *os.File, cmd string) (*cobra.Command, string, error) {
 	args, err := shellwords.Parse(cmd)
 	if err != nil {
 		return nil, "", err
 	}
+
 	buf := new(bytes.Buffer)
 
 	actionConfig := &action.Configuration{
@@ -110,16 +97,31 @@ func executeActionCommandC(store *storage.Storage, cmd string) (*cobra.Command, 
 		Log:          func(format string, v ...interface{}) {},
 	}
 
-	root := newRootCmd(actionConfig, buf, args)
-	root.SetOutput(buf)
+	root, err := newRootCmd(actionConfig, buf, args)
+	if err != nil {
+		return nil, "", err
+	}
+
+	root.SetOut(buf)
+	root.SetErr(buf)
 	root.SetArgs(args)
+
+	oldStdin := os.Stdin
+	if in != nil {
+		root.SetIn(in)
+		os.Stdin = in
+	}
 
 	if mem, ok := store.Driver.(*driver.Memory); ok {
 		mem.SetNamespace(settings.Namespace())
 	}
 	c, err := root.ExecuteC()
 
-	return c, buf.String(), err
+	result := buf.String()
+
+	os.Stdin = oldStdin
+
+	return c, result, err
 }
 
 // cmdTestCase describes a test case that works with releases.

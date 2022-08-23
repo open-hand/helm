@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main // import "helm.sh/helm/v3/cmd/helm"
+package main // import "github.com/open-hand/helm/cmd/helm"
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -25,28 +24,20 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"k8s.io/klog"
 	"sigs.k8s.io/yaml"
 
 	// Import to initialize client auth plugins.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/open-hand/helm/internal/completion"
 	"github.com/open-hand/helm/pkg/action"
 	"github.com/open-hand/helm/pkg/cli"
-	"github.com/open-hand/helm/pkg/gates"
+	"github.com/open-hand/helm/pkg/kube"
 	kubefake "github.com/open-hand/helm/pkg/kube/fake"
 	"github.com/open-hand/helm/pkg/release"
 	"github.com/open-hand/helm/pkg/storage/driver"
 )
 
-// FeatureGateOCI is the feature gate for checking if `helm chart` and `helm registry` commands should work
-const FeatureGateOCI = gates.Gate("HELM_EXPERIMENTAL_OCI")
-
-var (
-	settings = cli.New()
-)
+var settings = cli.New()
 
 func init() {
 	log.SetFlags(log.Lshortfile)
@@ -59,37 +50,35 @@ func debug(format string, v ...interface{}) {
 	}
 }
 
-func initKubeLogs() {
-	pflag.CommandLine.SetNormalizeFunc(wordSepNormalizeFunc)
-	gofs := flag.NewFlagSet("klog", flag.ExitOnError)
-	klog.InitFlags(gofs)
-	pflag.CommandLine.AddGoFlagSet(gofs)
-	pflag.CommandLine.Set("logtostderr", "true")
+func warning(format string, v ...interface{}) {
+	format = fmt.Sprintf("WARNING: %s\n", format)
+	fmt.Fprintf(os.Stderr, format, v...)
 }
 
 func main() {
-	initKubeLogs()
+	// Setting the name of the app for managedFields in the Kubernetes client.
+	// It is set here to the full name of "helm" so that renaming of helm to
+	// another name (e.g., helm2 or helm3) does not change the name of the
+	// manager as picked up by the automated name detection.
+	kube.ManagedFieldsManager = "helm"
 
 	actionConfig := new(action.Configuration)
-	cmd := newRootCmd(actionConfig, os.Stdout, os.Args[1:])
+	cmd, err := newRootCmd(actionConfig, os.Stdout, os.Args[1:])
+	if err != nil {
+		warning("%+v", err)
+		os.Exit(1)
+	}
 
-	if calledCmd, _, err := cmd.Find(os.Args[1:]); err == nil && calledCmd.Name() == completion.CompRequestCmd {
-		// If completion is being called, we have to check if the completion is for the "--kube-context"
-		// value; if it is, we cannot call the action.Init() method with an incomplete kube-context value
-		// or else it will fail immediately.  So, we simply unset the invalid kube-context value.
-		if args := os.Args[1:]; len(args) > 2 && args[len(args)-2] == "--kube-context" {
-			// We are completing the kube-context value!  Reset it as the current value is not valid.
-			settings.KubeContext = ""
+	// run when each command's execute method is called
+	cobra.OnInitialize(func() {
+		helmDriver := os.Getenv("HELM_DRIVER")
+		if err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), helmDriver, debug); err != nil {
+			log.Fatal(err)
 		}
-	}
-
-	helmDriver := os.Getenv("HELM_DRIVER")
-	if err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), helmDriver, debug); err != nil {
-		log.Fatal(err)
-	}
-	if helmDriver == "memory" {
-		loadReleasesInMemory(actionConfig)
-	}
+		if helmDriver == "memory" {
+			loadReleasesInMemory(actionConfig)
+		}
+	})
 
 	if err := cmd.Execute(); err != nil {
 		debug("%+v", err)
@@ -99,20 +88,6 @@ func main() {
 		default:
 			os.Exit(1)
 		}
-	}
-}
-
-// wordSepNormalizeFunc changes all flags that contain "_" separators
-func wordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
-	return pflag.NormalizedName(strings.ReplaceAll(name, "_", "-"))
-}
-
-func checkOCIFeatureGate() func(_ *cobra.Command, _ []string) error {
-	return func(_ *cobra.Command, _ []string) error {
-		if !FeatureGateOCI.IsEnabled() {
-			return FeatureGateOCI.Error()
-		}
-		return nil
 	}
 }
 

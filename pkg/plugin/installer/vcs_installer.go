@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package installer // import "helm.sh/helm/v3/pkg/plugin/installer"
+package installer // import "github.com/open-hand/helm/pkg/plugin/installer"
 
 import (
 	"os"
@@ -23,6 +23,7 @@ import (
 	"github.com/Masterminds/vcs"
 	"github.com/pkg/errors"
 
+	"github.com/open-hand/helm/internal/third_party/dep/fs"
 	"github.com/open-hand/helm/pkg/helmpath"
 	"github.com/open-hand/helm/pkg/plugin/cache"
 )
@@ -43,7 +44,7 @@ func existingVCSRepo(location string) (Installer, error) {
 		Repo: repo,
 		base: newBase(repo.Remote()),
 	}
-	return i, err
+	return i, nil
 }
 
 // NewVCSInstaller creates a new VCSInstaller.
@@ -65,7 +66,7 @@ func NewVCSInstaller(source, version string) (*VCSInstaller, error) {
 	return i, err
 }
 
-// Install clones a remote repository and creates a symlink to the plugin directory.
+// Install clones a remote repository and installs into the plugin directory.
 //
 // Implements Installer.
 func (i *VCSInstaller) Install() error {
@@ -87,7 +88,8 @@ func (i *VCSInstaller) Install() error {
 		return ErrMissingMetadata
 	}
 
-	return i.link(i.Repo.LocalPath())
+	debug("copying %s to %s", i.Repo.LocalPath(), i.Path())
+	return fs.CopyDir(i.Repo.LocalPath(), i.Path())
 }
 
 // Update updates a remote repository
