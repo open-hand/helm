@@ -180,7 +180,7 @@ func findReadme(files []*chart.File) (file *chart.File) {
 
 func (s *Show) FindHooks(releaseName string, chrt *chart.Chart, vals map[string]interface{}) ([]*release.Hook, error) {
 	options := chartutil.ReleaseOptions{
-		Name:      chrt.Name(),
+		Name:      releaseName,
 		Namespace: s.Namespace,
 		Revision:  1,
 	}
