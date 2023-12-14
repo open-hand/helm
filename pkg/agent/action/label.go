@@ -185,6 +185,7 @@ func AddLabel(imagePullSecret []v1.LocalObjectReference,
 		addAppLabels()
 	case "Pod":
 		addAppLabels()
+	case "PersistentVolumeClaim":
 	default:
 		glog.Warningf("Skipping to add choerodon label, object: Kind %s of Release %s", kind, releaseName)
 		return nil
